@@ -98,8 +98,8 @@
                             </Border>
                             <StackPanel Grid.Column="2" Width="190">
                                 <StackPanel Orientation="Horizontal">
-                                    <hc:NumericUpDown Width="110" Height="34" Minimum="0" Maximum="{Binding MaxScore}" Increment="0.5" DecimalPlaces="1"
-                                                      Value="{Binding Score, UpdateSourceTrigger=PropertyChanged}" />
+                                    <hc:NumericUpDown Width="110" Height="34" Minimum="0" Maximum="{Binding MaxScore}" Increment="0.5" DecimalPlaces="2"
+                                                      Value="{Binding Score, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Foreground="{DynamicResource SecondaryTextBrush}">
                                         <Run Text="/ " /><Run Text="{Binding MaxText, Mode=OneWay}" />
                                     </TextBlock>

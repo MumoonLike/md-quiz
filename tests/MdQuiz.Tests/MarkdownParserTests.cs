@@ -114,7 +114,8 @@ namespace MdQuiz.Tests
         [Fact]
         public void ReadmeExampleParses()
         {
-            var readme = File.ReadAllText(Path.Combine(TestPaths.RepoRoot, "README.md"));
+            // Windows 上 git 可能以 CRLF 检出
+            var readme = File.ReadAllText(Path.Combine(TestPaths.RepoRoot, "README.md")).Replace("\r\n", "\n");
             var start = readme.IndexOf("```markdown\n", System.StringComparison.Ordinal) + "```markdown\n".Length;
             var end = readme.IndexOf("\n```", start, System.StringComparison.Ordinal);
             var result = QuestionMarkdown.Parse(readme.Substring(start, end - start));

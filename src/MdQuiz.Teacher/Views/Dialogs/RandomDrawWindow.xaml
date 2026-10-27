@@ -55,9 +55,9 @@
                                     </Grid.ColumnDefinitions>
                                     <ComboBox Height="34" ItemsSource="{Binding TypeOptions}" DisplayMemberPath="Name" SelectedItem="{Binding Type}" />
                                     <ComboBox Grid.Column="1" Height="34" Margin="10,0,0,0" ItemsSource="{Binding Tags}" SelectedItem="{Binding Tag}" />
-                                    <hc:NumericUpDown Grid.Column="2" Height="34" Margin="10,0,0,0" Minimum="0" Maximum="500" Value="{Binding Count, UpdateSourceTrigger=PropertyChanged}" />
+                                    <hc:NumericUpDown Grid.Column="2" Height="34" Margin="10,0,0,0" Minimum="0" Maximum="500" Value="{Binding Count, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <hc:NumericUpDown Grid.Column="3" Height="34" Margin="10,0,0,0" Minimum="0" Maximum="1000" Increment="0.5" DecimalPlaces="1"
-                                                      Value="{Binding ScoreEach, UpdateSourceTrigger=PropertyChanged}" />
+                                                      Value="{Binding ScoreEach, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBlock Grid.Column="4" Margin="14,0,0,0" VerticalAlignment="Center" Text="{Binding AvailableText}">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">

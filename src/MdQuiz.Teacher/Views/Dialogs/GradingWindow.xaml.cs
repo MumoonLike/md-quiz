@@ -39,6 +39,7 @@ namespace MdQuiz.Teacher.Views.Dialogs
         {
             private readonly Action<AnswerRow> _scoreChanged;
             private bool _silent;
+            private double _applied;
 
             public AnswerRow(Action<AnswerRow> scoreChanged)
             {
@@ -60,13 +61,16 @@ namespace MdQuiz.Teacher.Views.Dialogs
 
             partial void OnScoreChanged(double value)
             {
-                if (!_silent) _scoreChanged(this);
+                // 控件回写的取整误差不算改分，避免把自动判分误存为人工分
+                if (_silent || Math.Abs(value - _applied) < 0.005) return;
+                _scoreChanged(this);
             }
 
             public void Apply(double? score, bool manual)
             {
                 _silent = true;
                 Score = score ?? 0;
+                _applied = Score;
                 _silent = false;
                 Manual = manual;
                 Pending = !score.HasValue;

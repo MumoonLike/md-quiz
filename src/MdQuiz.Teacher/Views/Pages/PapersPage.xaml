@@ -131,7 +131,7 @@
                                     <TextBlock Grid.Column="2" Text="{Binding Summary}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding Summary}" />
                                     <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="12,0">
                                         <hc:NumericUpDown Width="96" Height="30" Minimum="0" Maximum="1000" Increment="0.5" DecimalPlaces="1"
-                                                          Value="{Binding Score, UpdateSourceTrigger=PropertyChanged}" />
+                                                          Value="{Binding Score, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                         <TextBlock Text="分" Margin="6,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="4" Orientation="Horizontal">
