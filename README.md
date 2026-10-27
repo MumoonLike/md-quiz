@@ -145,6 +145,17 @@ dotnet publish src/MdQuiz.Student/MdQuiz.Student.csproj -c Release -o publish/Md
 - 在 Linux / macOS 上也能编译 WPF 项目（`EnableWindowsTargeting` 已开启），但程序只能在 Windows 上运行。
 - 本机调试：同一台电脑可以同时运行教师端和学生端（学生端会通过 127.0.0.1 找到本机教师端）。
 
+### 界面冒烟测试
+
+两个程序都支持 `--smoke <目录>` 参数，用于自动化检查界面：使用独立的临时数据目录（不影响正式数据），导入示例题库和花名册，逐页、逐个对话框截图，并让教师端和学生端在本机完成一场真实考试；同时记录绑定错误和未处理异常，有错误时退出码为 1。
+
+```powershell
+MdQuiz.Teacher.exe --smoke D:\smoke
+MdQuiz.Student.exe --smoke D:\smoke --server 127.0.0.1:47320 --student 20240101
+```
+
+在 GitHub Actions 中手动运行 `build` 工作流并勾选“同时运行界面冒烟测试”，即可在 Windows 上执行，截图和日志会上传为 `smoke-results`。平时推送代码只做编译、单元测试和打包，不运行冒烟测试。
+
 ## 第三方组件
 
 [HandyControl](https://github.com/HandyOrg/HandyControl)（MIT）、[Markdig](https://github.com/xoofx/markdig)（BSD-2）、[WpfMath](https://github.com/ForNeVeR/xaml-math)（MIT）、[Dapper](https://github.com/DapperLib/Dapper)（Apache-2.0）、[System.Data.SQLite](https://system.data.sqlite.org/)（Public Domain）、[MiniExcel](https://github.com/mini-software/MiniExcel)（Apache-2.0）、[Newtonsoft.Json](https://www.newtonsoft.com/json)（MIT）、[CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet)（MIT）、图标来自 [Material Design Icons](https://pictogrammers.com/library/mdi/)（Apache-2.0）。
