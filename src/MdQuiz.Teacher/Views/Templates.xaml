@@ -1,0 +1,27 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="clr-namespace:MdQuiz.Teacher.ViewModels"
+                    xmlns:pages="clr-namespace:MdQuiz.Teacher.Views.Pages">
+    <!-- 页面 ViewModel → 页面视图 -->
+    <DataTemplate DataType="{x:Type vm:MonitorViewModel}">
+        <pages:MonitorPage />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ExamsViewModel}">
+        <pages:ExamsPage />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:QuestionBankViewModel}">
+        <pages:QuestionBankPage />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:PapersViewModel}">
+        <pages:PapersPage />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:StudentsViewModel}">
+        <pages:StudentsPage />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:ResultsViewModel}">
+        <pages:ResultsPage />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+        <pages:SettingsPage />
+    </DataTemplate>
+</ResourceDictionary>

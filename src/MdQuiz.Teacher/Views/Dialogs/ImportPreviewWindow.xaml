@@ -1,0 +1,72 @@
+<hc:Window x:Class="MdQuiz.Teacher.Views.Dialogs.ImportPreviewWindow"
+           xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+           xmlns:hc="https://handyorg.github.io/handycontrol"
+           xmlns:ctl="clr-namespace:MdQuiz.Wpf.Controls;assembly=MdQuiz.Wpf"
+           Title="导入题目" Width="900" Height="700" MinHeight="500" ShowInTaskbar="False"
+           Background="{DynamicResource BackgroundBrush}">
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource RegionBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" Padding="24,14">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Content="取消" Style="{StaticResource ButtonDefault}" Width="88" Height="36" Margin="0,0,10,0" IsCancel="True" />
+                    <Button x:Name="ImportButton" Style="{StaticResource ButtonPrimary}" Height="36" Click="OnImport"
+                            hc:IconElement.Geometry="{StaticResource Icon.Import}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <CheckBox x:Name="CreatePaperBox" Content="同时用这些题目创建试卷" VerticalAlignment="Center" Checked="OnCreatePaperChanged" Unchecked="OnCreatePaperChanged" />
+                    <hc:TextBox x:Name="PaperNameBox" Width="220" Height="32" Margin="12,0,0,0" IsEnabled="False" hc:InfoElement.Placeholder="试卷名称" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Border DockPanel.Dock="Top" Background="{DynamicResource RegionBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1" Padding="24,16">
+            <StackPanel>
+                <TextBlock x:Name="SummaryText" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock x:Name="SummaryHint" Style="{StaticResource Muted}" Margin="0,4,0,12" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="给导入的题目加标签" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <hc:TextBox x:Name="TagBox" Width="260" Height="32" hc:InfoElement.Placeholder="可选，例如：第一章" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Grid Margin="20,14">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Border x:Name="WarningsPanel" Background="{DynamicResource LightWarningBrush}" CornerRadius="8" Padding="14,10" Margin="0,0,0,12" Visibility="Collapsed">
+                <TextBlock x:Name="WarningsText" Foreground="#9A6200" TextWrapping="Wrap" />
+            </Border>
+            <ListBox Grid.Row="1" x:Name="ItemsList" Style="{StaticResource CardList}">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource CardListItem}">
+                        <Setter Property="Cursor" Value="Arrow" />
+                        <Setter Property="Margin" Value="0,0,0,6" />
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="70" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding LineText}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                            <ctl:Chip Grid.Column="1" Text="{Binding TypeText}" Color="{Binding TypeColor}" Margin="0,0,10,0" />
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="{Binding Summary}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Error}" Foreground="{DynamicResource DangerBrush}" TextWrapping="Wrap" Margin="0,3,0,0"
+                                           Visibility="{Binding Error, Converter={StaticResource HasValueToVis}}" />
+                            </StackPanel>
+                            <TextBlock Grid.Column="3" Text="{Binding ScoreText}" Style="{StaticResource Muted}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </DockPanel>
+</hc:Window>

@@ -1,0 +1,90 @@
+<hc:Window x:Class="MdQuiz.Teacher.Views.MainWindow"
+           xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+           xmlns:hc="https://handyorg.github.io/handycontrol"
+           Title="MdQuiz 教师端" Width="1320" Height="820" MinWidth="1100" MinHeight="680"
+           WindowStartupLocation="CenterScreen"
+           NonClientAreaBackground="#26367A" NonClientAreaForeground="White"
+           OtherButtonForeground="White" OtherButtonHoverBackground="#22FFFFFF" OtherButtonHoverForeground="White"
+           CloseButtonForeground="White" Background="{DynamicResource BackgroundBrush}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="232" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- 侧边栏 -->
+        <Border Background="{DynamicResource SidebarBrush}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="24,18,0,26">
+                    <Border Width="40" Height="40" CornerRadius="10" Background="#33FFFFFF">
+                        <Path Data="{StaticResource Icon.SchoolOutline}" Fill="White" Width="22" Height="22" Stretch="Uniform" />
+                    </Border>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="MdQuiz" Foreground="White" FontSize="18" FontWeight="Bold" />
+                        <TextBlock Text="教师端" Foreground="#AEB9E8" FontSize="12" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- 服务状态 -->
+                <Border DockPanel.Dock="Bottom" Margin="16,0,16,18" Padding="14,12" CornerRadius="10" Background="#1FFFFFFF">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="8" Height="8" VerticalAlignment="Center">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="#FF8A8A" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ServerRunning}" Value="True">
+                                                <Setter Property="Fill" Value="#4ADE80" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock Text="{Binding ServerStatus}" Foreground="White" FontSize="12" Margin="8,0,0,0" />
+                        </StackPanel>
+                        <TextBlock Text="学生端连接地址" Foreground="#AEB9E8" FontSize="11" Margin="0,8,0,2" />
+                        <TextBlock Text="{Binding ServerAddress}" Foreground="White" FontSize="13" FontFamily="{StaticResource MonoFont}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel>
+                    <TextBlock Text="考试" Foreground="#8C99CC" FontSize="12" Margin="30,0,0,6" />
+                    <RadioButton Style="{StaticResource NavItem}" Content="监考" Tag="{StaticResource Icon.MonitorEye}"
+                                 Command="{Binding NavigateCommand}" CommandParameter="monitor"
+                                 IsChecked="{Binding CurrentKey, Converter={StaticResource EnumEquals}, ConverterParameter=monitor, Mode=OneWay}" />
+                    <RadioButton Style="{StaticResource NavItem}" Content="考试管理" Tag="{StaticResource Icon.ClipboardTextOutline}"
+                                 Command="{Binding NavigateCommand}" CommandParameter="exams"
+                                 IsChecked="{Binding CurrentKey, Converter={StaticResource EnumEquals}, ConverterParameter=exams, Mode=OneWay}" />
+                    <RadioButton Style="{StaticResource NavItem}" Content="成绩与批改" Tag="{StaticResource Icon.ChartBoxOutline}"
+                                 Command="{Binding NavigateCommand}" CommandParameter="results"
+                                 IsChecked="{Binding CurrentKey, Converter={StaticResource EnumEquals}, ConverterParameter=results, Mode=OneWay}" />
+                    <TextBlock Text="资源" Foreground="#8C99CC" FontSize="12" Margin="30,18,0,6" />
+                    <RadioButton Style="{StaticResource NavItem}" Content="题库" Tag="{StaticResource Icon.BookOpenVariant}"
+                                 Command="{Binding NavigateCommand}" CommandParameter="bank"
+                                 IsChecked="{Binding CurrentKey, Converter={StaticResource EnumEquals}, ConverterParameter=bank, Mode=OneWay}" />
+                    <RadioButton Style="{StaticResource NavItem}" Content="试卷" Tag="{StaticResource Icon.FileDocumentEditOutline}"
+                                 Command="{Binding NavigateCommand}" CommandParameter="papers"
+                                 IsChecked="{Binding CurrentKey, Converter={StaticResource EnumEquals}, ConverterParameter=papers, Mode=OneWay}" />
+                    <RadioButton Style="{StaticResource NavItem}" Content="学生" Tag="{StaticResource Icon.AccountGroup}"
+                                 Command="{Binding NavigateCommand}" CommandParameter="students"
+                                 IsChecked="{Binding CurrentKey, Converter={StaticResource EnumEquals}, ConverterParameter=students, Mode=OneWay}" />
+                    <TextBlock Text="系统" Foreground="#8C99CC" FontSize="12" Margin="30,18,0,6" />
+                    <RadioButton Style="{StaticResource NavItem}" Content="设置" Tag="{StaticResource Icon.CogOutline}"
+                                 Command="{Binding NavigateCommand}" CommandParameter="settings"
+                                 IsChecked="{Binding CurrentKey, Converter={StaticResource EnumEquals}, ConverterParameter=settings, Mode=OneWay}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- 页面 -->
+        <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" Margin="28,22,28,24" Focusable="False" />
+
+        <!-- 消息提示 -->
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Hidden" HorizontalAlignment="Right" VerticalAlignment="Top"
+                      Margin="0,8,8,0" IsHitTestVisible="True" Focusable="False">
+            <StackPanel hc:Growl.GrowlParent="True" VerticalAlignment="Top" Margin="0,0,10,10" />
+        </ScrollViewer>
+    </Grid>
+</hc:Window>

@@ -1,0 +1,83 @@
+<hc:Window x:Class="MdQuiz.Teacher.Views.Dialogs.RandomDrawWindow"
+           xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+           xmlns:hc="https://handyorg.github.io/handycontrol"
+           Title="随机抽题" Width="820" Height="560" MinHeight="420" ShowInTaskbar="False"
+           Background="{DynamicResource BackgroundBrush}">
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource RegionBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" Padding="24,14">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Content="取消" Style="{StaticResource ButtonDefault}" Width="88" Height="36" Margin="0,0,10,0" IsCancel="True" />
+                    <Button Content="开始抽题" Style="{StaticResource ButtonPrimary}" Height="36" Click="OnDraw"
+                            hc:IconElement.Geometry="{StaticResource Icon.DiceMultipleOutline}" />
+                </StackPanel>
+                <TextBlock x:Name="SummaryText" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </DockPanel>
+        </Border>
+
+        <StackPanel DockPanel.Dock="Top" Margin="24,16,24,0">
+            <TextBlock Text="按题型（和标签）从题库中随机抽取题目，已在试卷中的题目不会被重复抽到。抽题后可以在试卷中调整顺序和分值。"
+                       Style="{StaticResource Muted}" FontSize="13" />
+        </StackPanel>
+
+        <Border Style="{StaticResource Card}" Margin="24,14,24,16" Padding="16,12">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Margin="4,0,4,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="40" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="题型" Style="{StaticResource FieldLabel}" />
+                    <TextBlock Grid.Column="1" Text="标签（可不选）" Style="{StaticResource FieldLabel}" Margin="10,0,0,6" />
+                    <TextBlock Grid.Column="2" Text="抽取数量" Style="{StaticResource FieldLabel}" Margin="10,0,0,6" />
+                    <TextBlock Grid.Column="3" Text="每题分值" Style="{StaticResource FieldLabel}" Margin="10,0,0,6" />
+                    <TextBlock Grid.Column="4" Text="题库可用" Style="{StaticResource FieldLabel}" Margin="10,0,0,6" />
+                </Grid>
+                <Button DockPanel.Dock="Bottom" Content="+ 添加一条规则" Style="{StaticResource ButtonDashedPrimary}" HorizontalAlignment="Stretch" Height="36"
+                        Margin="4,6,4,0" Click="OnAddRule" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="RuleList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="4,0,4,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="90" />
+                                        <ColumnDefinition Width="40" />
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox Height="34" ItemsSource="{Binding TypeOptions}" DisplayMemberPath="Name" SelectedItem="{Binding Type}" />
+                                    <ComboBox Grid.Column="1" Height="34" Margin="10,0,0,0" ItemsSource="{Binding Tags}" SelectedItem="{Binding Tag}" />
+                                    <hc:NumericUpDown Grid.Column="2" Height="34" Margin="10,0,0,0" Minimum="0" Maximum="500" Value="{Binding Count, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <hc:NumericUpDown Grid.Column="3" Height="34" Margin="10,0,0,0" Minimum="0" Maximum="1000" Increment="0.5" DecimalPlaces="1"
+                                                      Value="{Binding ScoreEach, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Grid.Column="4" Margin="14,0,0,0" VerticalAlignment="Center" Text="{Binding AvailableText}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding NotEnough}" Value="True">
+                                                        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <Button Grid.Column="5" Style="{StaticResource ButtonIcon}" hc:IconElement.Geometry="{StaticResource Icon.Close}"
+                                            Foreground="{DynamicResource ThirdlyTextBrush}" Width="32" Height="32" Padding="9" Click="OnRemoveRule" ToolTip="删除规则" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </DockPanel>
+</hc:Window>

@@ -1,0 +1,134 @@
+<UserControl x:Class="MdQuiz.Teacher.Views.Pages.ResultsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:ctl="clr-namespace:MdQuiz.Wpf.Controls;assembly=MdQuiz.Wpf">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center"
+                        Visibility="{Binding HasExam, Converter={StaticResource BoolToVis}}">
+                <Button Style="{StaticResource ButtonIcon}" hc:IconElement.Geometry="{StaticResource Icon.Refresh}" ToolTip="刷新"
+                        Foreground="{DynamicResource SecondaryTextBrush}" Width="36" Height="36" Margin="0,0,8,0" Command="{Binding RefreshCommand}" />
+                <Button Content="导出 Excel" Style="{StaticResource ButtonDefault}" Height="36" Margin="0,0,8,0"
+                        hc:IconElement.Geometry="{StaticResource Icon.Export}" Command="{Binding ExportCommand}" />
+                <Button Content="批改 / 改分" Style="{StaticResource ButtonPrimary}" Height="36"
+                        hc:IconElement.Geometry="{StaticResource Icon.PencilOutline}" Command="{Binding GradeCommand}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="成绩与批改" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+                <ComboBox Width="320" Height="34" Margin="20,0,0,0" ItemsSource="{Binding Exams}" SelectedItem="{Binding SelectedExam}"
+                          VerticalAlignment="Center" Visibility="{Binding Exams.Count, Converter={StaticResource HasValueToVis}}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding Title, Mode=OneWay}" />
+                                <Run Text="{Binding CreatedAt, Mode=OneWay, Converter={StaticResource LocalTime}, ConverterParameter='（yyyy-MM-dd）'}" Foreground="{DynamicResource SecondaryTextBrush}" />
+                            </TextBlock>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- 统计 -->
+        <Grid Grid.Row="1" Margin="0,18,0,16" Visibility="{Binding HasExam, Converter={StaticResource BoolToVis}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="360" />
+            </Grid.ColumnDefinitions>
+            <UniformGrid Rows="1" Columns="5" Margin="0,0,4,0">
+                <Border Style="{StaticResource Card}" Padding="16,12" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource BigNumber}">
+                            <Run Text="{Binding Attended, Mode=OneWay}" /><Run Text=" / " FontSize="16" Foreground="{DynamicResource ThirdlyTextBrush}" /><Run Text="{Binding Expected, Mode=OneWay}" FontSize="16" Foreground="{DynamicResource ThirdlyTextBrush}" />
+                        </TextBlock>
+                        <TextBlock Text="实考 / 应考" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Padding="16,12" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Average}" Style="{StaticResource BigNumber}" Foreground="{DynamicResource PrimaryBrush}" />
+                        <TextBlock Style="{StaticResource Muted}"><Run Text="平均分 · " /><Run Text="{Binding FullScore, Mode=OneWay}" /></TextBlock>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Padding="16,12" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Highest}" Style="{StaticResource BigNumber}" Foreground="{DynamicResource SuccessBrush}" />
+                        <TextBlock Text="最高分" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Padding="16,12" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Lowest}" Style="{StaticResource BigNumber}" />
+                        <TextBlock Text="最低分" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Padding="16,12" Margin="0,0,12,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Pending}" Style="{StaticResource BigNumber}" Foreground="#8B5CF6" />
+                        <TextBlock Text="人有待批改题目" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- 分数段 -->
+            <Border Grid.Column="1" Style="{StaticResource Card}" Padding="16,10" Margin="4,0,0,0">
+                <ItemsControl ItemsSource="{Binding Buckets}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="64" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="36" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Label}" Style="{StaticResource Muted}" VerticalAlignment="Center" />
+                                <ProgressBar Grid.Column="1" Style="{StaticResource ThinProgress}" Height="8" Value="{Binding Percent, Mode=OneWay}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="{Binding Count}" HorizontalAlignment="Right" FontSize="12" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </Grid>
+
+        <!-- 成绩表 -->
+        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="0" Visibility="{Binding HasExam, Converter={StaticResource BoolToVis}}">
+            <DataGrid ItemsSource="{Binding Rows}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                      CanUserAddRows="False" BorderThickness="0" Background="Transparent" RowHeight="40">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="学号" Binding="{Binding StudentNo}" Width="130" />
+                    <DataGridTextColumn Header="姓名" Binding="{Binding Name}" Width="110" />
+                    <DataGridTextColumn Header="班级" Binding="{Binding ClassName}" Width="130" />
+                    <DataGridTemplateColumn Header="状态" Width="130" SortMemberPath="StatusText">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ctl:Chip Text="{Binding StatusText}" Color="{Binding StatusColor}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="客观题" Binding="{Binding Objective}" Width="90" SortMemberPath="P.ObjectiveScore" />
+                    <DataGridTextColumn Header="主观题" Binding="{Binding Subjective}" Width="90" SortMemberPath="P.SubjectiveScore" />
+                    <DataGridTextColumn Header="总分" Binding="{Binding Total}" Width="90" FontWeight="SemiBold" SortMemberPath="P.TotalScore" />
+                    <DataGridTextColumn Header="切屏" Binding="{Binding FocusLost}" Width="70" />
+                    <DataGridTextColumn Header="交卷时间" Binding="{Binding SubmittedAt, Converter={StaticResource LocalTime}, ConverterParameter='HH:mm:ss'}" Width="*" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <Border Grid.Row="1" Grid.RowSpan="2" Style="{StaticResource Card}" Margin="0,18,0,0"
+                Visibility="{Binding HasExam, Converter={StaticResource BoolToVis}, ConverterParameter=invert}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Path Data="{StaticResource Icon.ChartBoxOutline}" Fill="{DynamicResource ThirdlyTextBrush}" Width="56" Height="56" Stretch="Uniform" />
+                <TextBlock Text="还没有已结束的考试" Style="{StaticResource EmptyHint}" FontSize="16" Margin="0,16,0,6" />
+                <TextBlock Text="考试结束后，这里会显示成绩统计，并可以批改简答题、导出 Excel。" Style="{StaticResource EmptyHint}" FontSize="13" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

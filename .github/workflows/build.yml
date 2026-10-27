@@ -1,0 +1,87 @@
+name: build
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      smoke:
+        description: '同时运行界面冒烟测试（教师端 + 学生端在本机完成一场考试并截图，约 5 分钟）'
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Test
+        run: dotnet test tests/MdQuiz.Tests/MdQuiz.Tests.csproj -c Release --logger "console;verbosity=normal"
+
+      - name: Publish teacher
+        run: dotnet publish src/MdQuiz.Teacher/MdQuiz.Teacher.csproj -c Release -o publish/MdQuiz-Teacher
+
+      - name: Publish student
+        run: dotnet publish src/MdQuiz.Student/MdQuiz.Student.csproj -c Release -o publish/MdQuiz-Student
+
+      - name: Add samples and scripts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force publish/MdQuiz-Teacher/samples | Out-Null
+          Copy-Item samples/* publish/MdQuiz-Teacher/samples/
+          Copy-Item scripts/firewall-teacher.bat publish/MdQuiz-Teacher/
+          Get-ChildItem publish -Recurse -Include *.pdb,*.xml | Remove-Item
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MdQuiz-Teacher
+          path: publish/MdQuiz-Teacher
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MdQuiz-Student
+          path: publish/MdQuiz-Student
+
+      # ---------- 界面冒烟测试（仅手动触发并勾选时运行） ----------
+      - name: Set screen resolution
+        if: ${{ inputs.smoke }}
+        continue-on-error: true
+        shell: pwsh
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+
+      - name: UI smoke test
+        if: ${{ inputs.smoke }}
+        shell: pwsh
+        run: |
+          $out = Join-Path $pwd 'smoke'
+          New-Item -ItemType Directory -Force $out | Out-Null
+          $teacher = Start-Process -FilePath publish/MdQuiz-Teacher/MdQuiz.Teacher.exe -ArgumentList @('--smoke', $out) -PassThru
+          $null = $teacher.Handle
+          Start-Sleep -Seconds 8
+          $student = Start-Process -FilePath publish/MdQuiz-Student/MdQuiz.Student.exe -ArgumentList @('--smoke', $out, '--server', '127.0.0.1:47320', '--student', '20240101') -PassThru
+          $null = $student.Handle
+          $finished = $teacher.WaitForExit(600000)
+          $finished = $student.WaitForExit(60000) -and $finished
+          foreach ($log in @('teacher-smoke.log', 'student-smoke.log')) {
+            Write-Host "===== $log ====="
+            if (Test-Path "$out/$log") { Get-Content "$out/$log" } else { Write-Host '(missing)' }
+          }
+          if (-not $finished) {
+            Write-Host 'Smoke test timed out'
+            Stop-Process -Id $teacher.Id, $student.Id -Force -ErrorAction SilentlyContinue
+            exit 1
+          }
+          Write-Host "teacher exit=$($teacher.ExitCode) student exit=$($student.ExitCode)"
+          if ($teacher.ExitCode -ne 0 -or $student.ExitCode -ne 0) { exit 1 }
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() && inputs.smoke }}
+        with:
+          name: smoke-results
+          path: smoke
