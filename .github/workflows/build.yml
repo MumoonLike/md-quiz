@@ -1,0 +1,44 @@
+name: build
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Test
+        run: dotnet test tests/MdQuiz.Tests/MdQuiz.Tests.csproj -c Release --logger "console;verbosity=normal"
+
+      - name: Publish teacher
+        run: dotnet publish src/MdQuiz.Teacher/MdQuiz.Teacher.csproj -c Release -o publish/MdQuiz-Teacher
+
+      - name: Publish student
+        run: dotnet publish src/MdQuiz.Student/MdQuiz.Student.csproj -c Release -o publish/MdQuiz-Student
+
+      - name: Add samples and scripts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force publish/MdQuiz-Teacher/samples | Out-Null
+          Copy-Item samples/* publish/MdQuiz-Teacher/samples/
+          Copy-Item scripts/firewall-teacher.bat publish/MdQuiz-Teacher/
+          Get-ChildItem publish -Recurse -Include *.pdb,*.xml | Remove-Item
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MdQuiz-Teacher
+          path: publish/MdQuiz-Teacher
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MdQuiz-Student
+          path: publish/MdQuiz-Student

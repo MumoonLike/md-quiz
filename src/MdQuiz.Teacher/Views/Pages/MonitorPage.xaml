@@ -1,0 +1,268 @@
+<UserControl x:Class="MdQuiz.Teacher.Views.Pages.MonitorPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:ctl="clr-namespace:MdQuiz.Wpf.Controls;assembly=MdQuiz.Wpf"
+             xmlns:vm="clr-namespace:MdQuiz.Teacher.ViewModels"
+             x:Name="Root">
+    <UserControl.Resources>
+        <DataTemplate x:Key="StudentCard" DataType="{x:Type vm:ParticipantItem}">
+            <Border x:Name="Card" Width="214" Margin="0,0,12,12" Padding="14,12" CornerRadius="10"
+                    Background="{DynamicResource RegionBrush}" BorderThickness="1" BorderBrush="{DynamicResource CardBorderBrush}"
+                    Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}" ToolTip="{Binding Detail}">
+                <Border.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="允许换电脑重新登录" Command="{Binding PlacementTarget.Tag.ReleaseCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                  CommandParameter="{Binding}" />
+                    </ContextMenu>
+                </Border.ContextMenu>
+                <StackPanel>
+                    <DockPanel>
+                        <ctl:Chip DockPanel.Dock="Right" Text="{Binding StatusText}" Color="{Binding StatusColor}" />
+                        <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,10" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap">
+                        <Run Text="{Binding StudentNo, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{Binding ClassName, Mode=OneWay}" />
+                    </TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ProgressBar Style="{StaticResource ThinProgress}" Value="{Binding Progress, Mode=OneWay}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Style="{StaticResource Muted}" Margin="10,0,0,0">
+                            <Run Text="{Binding Answered, Mode=OneWay}" /><Run Text="/" /><Run Text="{Binding QuestionCount, Mode=OneWay}" />
+                        </TextBlock>
+                    </Grid>
+                    <DockPanel Margin="0,10,0,0" MinHeight="18">
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding FocusLost, Converter={StaticResource HasValueToVis}}">
+                            <Path Data="{StaticResource Icon.AlertCircleOutline}" Style="{StaticResource Icon}" Width="14" Height="14" Fill="{DynamicResource WarningBrush}" />
+                            <TextBlock Foreground="{DynamicResource WarningBrush}" FontSize="12" Margin="4,0,0,0" VerticalAlignment="Center">
+                                <Run Text="切屏" /><Run Text="{Binding FocusLost, Mode=OneWay}" /><Run Text="次" />
+                            </TextBlock>
+                        </StackPanel>
+                        <TextBlock Text="{Binding Machine}" Style="{StaticResource Muted}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                    </DockPanel>
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsOffline}" Value="True">
+                    <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource DangerBrush}" />
+                    <Setter TargetName="Card" Property="Background" Value="{DynamicResource LightDangerBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Absent">
+                    <Setter TargetName="Card" Property="Opacity" Value="0.6" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- ================= 没有考试 ================= -->
+        <Grid Visibility="{Binding HasExam, Converter={StaticResource BoolToVis}, ConverterParameter=invert}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBlock Text="监考" Style="{StaticResource PageTitle}" />
+            <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,18,0,0">
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="560">
+                    <StackPanel>
+                        <Border Width="84" Height="84" CornerRadius="42" Background="{DynamicResource LightPrimaryBrush}" HorizontalAlignment="Center">
+                            <Path Data="{StaticResource Icon.MonitorEye}" Fill="{DynamicResource PrimaryBrush}" Width="40" Height="40" Stretch="Uniform" />
+                        </Border>
+                        <TextBlock Text="当前没有开放的考试" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,20,0,8" />
+                        <TextBlock Text="开放登录后，学生打开学生端即可自动找到本机并登录候考。" Style="{StaticResource Muted}" FontSize="13" HorizontalAlignment="Center" TextAlignment="Center" />
+
+                        <TextBlock Text="未开始的考试" Style="{StaticResource SectionTitle}" Margin="0,28,0,10"
+                                   Visibility="{Binding ReadyExams.Count, Converter={StaticResource HasValueToVis}}" />
+                        <ItemsControl ItemsSource="{Binding ReadyExams}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource SecondaryRegionBrush}" CornerRadius="8" Padding="16,12" Margin="0,0,0,8">
+                                        <DockPanel>
+                                            <Button DockPanel.Dock="Right" Content="开放登录" Style="{StaticResource ButtonPrimary}"
+                                                    hc:IconElement.Geometry="{StaticResource Icon.LanConnect}"
+                                                    Command="{Binding DataContext.OpenExamCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14" />
+                                                <TextBlock Style="{StaticResource Muted}" Margin="0,3,0,0">
+                                                    <Run Text="{Binding PaperName, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding QuestionCount, Mode=OneWay}" /><Run Text=" 题 · 满分 " /><Run Text="{Binding TotalScore, Mode=OneWay, Converter={StaticResource Score}}" />
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Content="新建考试" Style="{StaticResource BigPrimaryButton}" HorizontalAlignment="Center" Margin="0,18,0,0"
+                                hc:IconElement.Geometry="{StaticResource Icon.Plus}" Command="{Binding CreateExamCommand}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ================= 考试中 ================= -->
+        <Grid Visibility="{Binding HasExam, Converter={StaticResource BoolToVis}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- 标题与控制 -->
+            <Border Style="{StaticResource CardElevated}" Padding="24,18">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" TextTrimming="CharacterEllipsis" MaxWidth="520" />
+                            <ctl:Chip Margin="12,2,0,0" Text="{Binding Status, Converter={StaticResource ExamStatusText}}" Color="{Binding Status, Converter={StaticResource ExamStatusColor}}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Subtitle}" Style="{StaticResource Muted}" FontSize="13" Margin="0,6,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="24,0,28,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Clock}" FontSize="32" FontWeight="SemiBold" FontFamily="{StaticResource MonoFont}" HorizontalAlignment="Right">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ClockWarning}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="{Binding ClockLabel}" Style="{StaticResource Muted}" HorizontalAlignment="Right" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- 候考中 -->
+                        <Button Content="取消开放" Style="{StaticResource BigDefaultButton}" Margin="0,0,10,0" Command="{Binding CloseCommand}"
+                                Visibility="{Binding IsOpen, Converter={StaticResource BoolToVis}}" />
+                        <Button Content="开始考试" Style="{StaticResource BigPrimaryButton}" hc:IconElement.Geometry="{StaticResource Icon.Play}"
+                                Command="{Binding StartCommand}" Visibility="{Binding IsOpen, Converter={StaticResource BoolToVis}}" />
+                        <!-- 考试中 -->
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="延长" Style="{StaticResource Muted}" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <Button Content="+5 分" Style="{StaticResource ButtonDefault}" Height="44" Margin="0,0,6,0" Command="{Binding ExtendCommand}" CommandParameter="5" />
+                            <Button Content="+10 分" Style="{StaticResource ButtonDefault}" Height="44" Margin="0,0,16,0" Command="{Binding ExtendCommand}" CommandParameter="10" />
+                            <Button Content="结束考试" Style="{StaticResource BigDangerButton}" hc:IconElement.Geometry="{StaticResource Icon.Stop}" Command="{Binding EndCommand}" />
+                        </StackPanel>
+                        <!-- 已结束 -->
+                        <Button Content="关闭" Style="{StaticResource BigDefaultButton}" Margin="0,0,10,0" Command="{Binding CloseCommand}"
+                                Visibility="{Binding IsEnded, Converter={StaticResource BoolToVis}}" />
+                        <Button Content="查看成绩" Style="{StaticResource BigPrimaryButton}" hc:IconElement.Geometry="{StaticResource Icon.ChartBoxOutline}"
+                                Command="{Binding ViewResultsCommand}" Visibility="{Binding IsEnded, Converter={StaticResource BoolToVis}}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 统计 / 筛选 -->
+            <UniformGrid Grid.Row="1" Rows="1" Columns="6" Margin="0,16,-12,16">
+                <RadioButton Style="{StaticResource StatFilter}" IsChecked="True" Command="{Binding SetFilterCommand}" CommandParameter="all">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Total}" Style="{StaticResource BigNumber}" />
+                        <TextBlock Text="应考" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource StatFilter}" Command="{Binding SetFilterCommand}" CommandParameter="absent">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource BigNumber}">
+                            <Run Text="{Binding LoggedIn, Mode=OneWay}" /><Run Text=" / " FontSize="16" Foreground="{DynamicResource ThirdlyTextBrush}" /><Run Text="{Binding Total, Mode=OneWay}" FontSize="16" Foreground="{DynamicResource ThirdlyTextBrush}" />
+                        </TextBlock>
+                        <TextBlock Text="已登录（点击查看未登录）" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource StatFilter}" Command="{Binding SetFilterCommand}" CommandParameter="answering">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Answering}" Style="{StaticResource BigNumber}" Foreground="{DynamicResource PrimaryBrush}" />
+                        <TextBlock Text="答题中" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource StatFilter}" Command="{Binding SetFilterCommand}" CommandParameter="submitted">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Submitted}" Style="{StaticResource BigNumber}" Foreground="{DynamicResource SuccessBrush}" />
+                        <TextBlock Text="已交卷" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource StatFilter}" Command="{Binding SetFilterCommand}" CommandParameter="offline">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Offline}" Style="{StaticResource BigNumber}" Foreground="{DynamicResource DangerBrush}" />
+                        <TextBlock Text="已断开" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource StatFilter}" Command="{Binding SetFilterCommand}" CommandParameter="alerts">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Alerts}" Style="{StaticResource BigNumber}" Foreground="{DynamicResource WarningBrush}" />
+                        <TextBlock Text="有切屏记录" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </RadioButton>
+            </UniformGrid>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="300" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 学生卡片 -->
+                <Border Style="{StaticResource Card}" Padding="18,18,6,6">
+                    <Grid>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding ParticipantsView}" ItemTemplate="{StaticResource StudentCard}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        <TextBlock Text="没有符合条件的学生" Style="{StaticResource EmptyHint}"
+                                   Visibility="{Binding ParticipantsView.IsEmpty, Converter={StaticResource BoolToVis}}" />
+                    </Grid>
+                </Border>
+
+                <!-- 动态 -->
+                <Border Grid.Column="1" Style="{StaticResource Card}" Margin="16,0,0,0" Padding="18,16">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+                            <Path Data="{StaticResource Icon.ClockOutline}" Style="{StaticResource Icon}" Fill="{DynamicResource PrimaryBrush}" />
+                            <TextBlock Text="实时动态" Style="{StaticResource SectionTitle}" Margin="8,0,0,0" />
+                        </StackPanel>
+                        <Grid>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding Logs}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type vm:LogItem}">
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="8" Height="8" Margin="0,6,10,0" VerticalAlignment="Top"
+                                                         Fill="{Binding Color, Converter={StaticResource ColorToBrush}}" />
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13" />
+                                                    <TextBlock Text="{Binding Time}" Style="{StaticResource Muted}" Margin="0,2,0,0" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            <TextBlock Text="学生登录、交卷、切屏等动态会显示在这里" Style="{StaticResource EmptyHint}" FontSize="12"
+                                       Visibility="{Binding Logs.Count, Converter={StaticResource HasValueToVis}, ConverterParameter=invert}" />
+                        </Grid>
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

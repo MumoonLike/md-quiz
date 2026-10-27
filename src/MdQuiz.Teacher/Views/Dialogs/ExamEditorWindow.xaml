@@ -1,0 +1,115 @@
+<hc:Window x:Class="MdQuiz.Teacher.Views.Dialogs.ExamEditorWindow"
+           xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+           xmlns:hc="https://handyorg.github.io/handycontrol"
+           Title="新建考试" Width="680" Height="720" MinHeight="560" ShowInTaskbar="False"
+           Background="{DynamicResource BackgroundBrush}">
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource RegionBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" Padding="24,14">
+            <DockPanel>
+                <TextBlock x:Name="ErrorText" Foreground="{DynamicResource DangerBrush}" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="280" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="取消" Style="{StaticResource ButtonDefault}" Height="36" Width="88" Margin="0,0,10,0" IsCancel="True" />
+                    <Button Content="创建" Style="{StaticResource ButtonDefault}" Height="36" Width="88" Margin="0,0,10,0" Click="OnCreate" />
+                    <Button Content="创建并开放登录" Style="{StaticResource ButtonPrimary}" Height="36" IsDefault="True"
+                            hc:IconElement.Geometry="{StaticResource Icon.LanConnect}" Click="OnCreateAndOpen" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="24,16,24,20">
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="基本信息" Style="{StaticResource SectionTitle}" Margin="0,0,0,14" />
+                        <TextBlock Text="试卷" Style="{StaticResource FieldLabel}" />
+                        <ComboBox x:Name="PaperBox" Height="38" SelectionChanged="OnPaperChanged">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding Name, Mode=OneWay}" />
+                                        <Run Foreground="{DynamicResource SecondaryTextBrush}" Text="{Binding Items.Count, Mode=OneWay, StringFormat='（{0} 题'}" /><Run Foreground="{DynamicResource SecondaryTextBrush}" Text="{Binding TotalScore, Mode=OneWay, StringFormat=' · 满分 {0}）'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <TextBlock Text="考试名称" Style="{StaticResource FieldLabel}" Margin="0,14,0,6" />
+                        <TextBox x:Name="TitleBox" Height="38" />
+                        <TextBlock Text="考试时长（分钟）" Style="{StaticResource FieldLabel}" Margin="0,14,0,6" />
+                        <hc:NumericUpDown x:Name="DurationBox" Height="38" Width="180" HorizontalAlignment="Left" Minimum="1" Maximum="600" Value="45" Increment="5" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,10">
+                            <Button DockPanel.Dock="Right" Content="全选" Style="{StaticResource LinkButton}" Click="OnSelectAllClasses" />
+                            <TextBlock Text="参加的班级" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <ItemsControl x:Name="ClassList">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding Selected}" Margin="0,0,20,10" MinWidth="150">
+                                        <TextBlock>
+                                            <Run Text="{Binding Name, Mode=OneWay}" />
+                                            <Run Text="{Binding Count, Mode=OneWay, StringFormat='（{0} 人）'}" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                        </TextBlock>
+                                    </CheckBox>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                    <StackPanel>
+                        <TextBlock Text="多选题计分" Style="{StaticResource SectionTitle}" Margin="0,0,0,10" />
+                        <RadioButton x:Name="ModeHalf" GroupName="Mode" IsChecked="True" Margin="0,0,0,8"
+                                     Content="少选得一半分，有错选 0 分（推荐）" />
+                        <RadioButton x:Name="ModeAll" GroupName="Mode" Margin="0,0,0,8" Content="与答案完全一致才得分" />
+                        <RadioButton x:Name="ModeProportional" GroupName="Mode" Content="按选对的比例给分，有错选 0 分" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+                    <StackPanel>
+                        <TextBlock Text="考试规则" Style="{StaticResource SectionTitle}" Margin="0,0,0,12" />
+                        <DockPanel Margin="0,0,0,12">
+                            <ToggleButton x:Name="AntiCheatBox" DockPanel.Dock="Right" Style="{StaticResource ToggleButtonSwitch}" IsChecked="True" />
+                            <StackPanel>
+                                <TextBlock Text="防作弊" FontWeight="SemiBold" />
+                                <TextBlock Text="答题窗口全屏置顶，学生切换窗口时上报到监考页面" Style="{StaticResource Muted}" />
+                            </StackPanel>
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,12">
+                            <ToggleButton x:Name="ShuffleQuestionsBox" DockPanel.Dock="Right" Style="{StaticResource ToggleButtonSwitch}" />
+                            <StackPanel>
+                                <TextBlock Text="题目乱序" FontWeight="SemiBold" />
+                                <TextBlock Text="每个学生的题目顺序不同（同一题型内打乱，大题顺序不变）" Style="{StaticResource Muted}" />
+                            </StackPanel>
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,12">
+                            <ToggleButton x:Name="ShuffleOptionsBox" DockPanel.Dock="Right" Style="{StaticResource ToggleButtonSwitch}" />
+                            <StackPanel>
+                                <TextBlock Text="选项乱序" FontWeight="SemiBold" />
+                                <TextBlock Text="选择题选项顺序打乱。选项中有“以上都对”之类时请不要开启" Style="{StaticResource Muted}" />
+                            </StackPanel>
+                        </DockPanel>
+                        <DockPanel>
+                            <ToggleButton x:Name="ShowScoreBox" DockPanel.Dock="Right" Style="{StaticResource ToggleButtonSwitch}" IsChecked="True" />
+                            <StackPanel>
+                                <TextBlock Text="交卷后显示得分" FontWeight="SemiBold" />
+                                <TextBlock Text="学生交卷后立即看到客观题得分（简答题待批改）" Style="{StaticResource Muted}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</hc:Window>

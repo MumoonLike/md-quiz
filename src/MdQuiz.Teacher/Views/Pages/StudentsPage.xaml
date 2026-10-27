@@ -1,0 +1,103 @@
+<UserControl x:Class="MdQuiz.Teacher.Views.Pages.StudentsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="270" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- 班级 -->
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,18">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="新建班级" Style="{StaticResource ButtonPrimary}" Height="36"
+                            hc:IconElement.Geometry="{StaticResource Icon.Plus}" Command="{Binding AddClassCommand}" />
+                    <TextBlock Text="学生" Style="{StaticResource PageTitle}" VerticalAlignment="Center" />
+                </DockPanel>
+                <TextBlock Text="{Binding Summary}" Style="{StaticResource Muted}" FontSize="13" Margin="0,6,0,0" />
+            </StackPanel>
+            <Grid>
+                <ListBox Style="{StaticResource CardList}" ItemsSource="{Binding Classes}" SelectedItem="{Binding SelectedClass}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Style="{StaticResource Muted}" VerticalAlignment="Center">
+                                    <Run Text="{Binding StudentCount, Mode=OneWay}" /><Run Text=" 人" />
+                                </TextBlock>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource Icon.AccountGroup}" Style="{StaticResource Icon}" Fill="{DynamicResource PrimaryBrush}" />
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock Style="{StaticResource EmptyHint}" Text="还没有班级&#x0a;可以新建班级，或直接导入花名册（按“班级”列自动建班）"
+                           Visibility="{Binding Classes.Count, Converter={StaticResource HasValueToVis}, ConverterParameter=invert}" />
+            </Grid>
+        </DockPanel>
+
+        <!-- 学生 -->
+        <Border Grid.Column="1" Style="{StaticResource Card}" Margin="20,0,0,0" Padding="0">
+            <DockPanel>
+                <Border DockPanel.Dock="Top" Padding="20,16" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1">
+                    <StackPanel>
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <Button Content="下载模板" Style="{StaticResource LinkButton}" Margin="0,0,8,0" Command="{Binding DownloadTemplateCommand}" />
+                                <Button Content="导入花名册" Style="{StaticResource ButtonDefault}"
+                                        hc:IconElement.Geometry="{StaticResource Icon.FileExcelOutline}" Command="{Binding ImportCommand}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding SelectedClass.Name, FallbackValue=未选择班级}" Style="{StaticResource SectionTitle}" FontSize="17" VerticalAlignment="Center" />
+                                <Button Content="重命名" Style="{StaticResource LinkButton}" Margin="12,0,0,0" Command="{Binding RenameClassCommand}"
+                                        Visibility="{Binding HasClass, Converter={StaticResource BoolToVis}}" />
+                                <Button Content="删除班级" Style="{StaticResource LinkButton}" Foreground="{DynamicResource DangerBrush}" Command="{Binding DeleteClassCommand}"
+                                        Visibility="{Binding HasClass, Converter={StaticResource BoolToVis}}" />
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- 添加学生 -->
+                        <DockPanel Margin="0,14,0,0" Visibility="{Binding HasClass, Converter={StaticResource BoolToVis}}">
+                            <hc:TextBox DockPanel.Dock="Right" Width="200" Height="34" hc:InfoElement.Placeholder="搜索学号或姓名"
+                                        hc:InfoElement.ShowClearButton="True" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged, Delay=250}" />
+                            <StackPanel Orientation="Horizontal">
+                                <hc:TextBox Width="150" Height="34" hc:InfoElement.Placeholder="学号" Text="{Binding NewNo, UpdateSourceTrigger=PropertyChanged}" />
+                                <hc:TextBox Width="130" Height="34" Margin="8,0,0,0" hc:InfoElement.Placeholder="姓名" Text="{Binding NewName, UpdateSourceTrigger=PropertyChanged}"
+                                            KeyDown="OnNameKeyDown" />
+                                <Button Content="添加学生" Style="{StaticResource ButtonPrimary}" Height="34" Margin="8,0,0,0"
+                                        hc:IconElement.Geometry="{StaticResource Icon.Plus}" Command="{Binding AddStudentCommand}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border DockPanel.Dock="Bottom" Padding="20,10" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="删除选中学生" Style="{StaticResource ButtonDefault}" Foreground="{DynamicResource DangerBrush}"
+                                hc:IconElement.Geometry="{StaticResource Icon.DeleteOutline}"
+                                Command="{Binding DeleteStudentsCommand}" CommandParameter="{Binding SelectedItems, ElementName=StudentGrid}" />
+                        <TextBlock Style="{StaticResource Muted}" VerticalAlignment="Center"
+                                   Text="双击可修改学号或姓名；按住 Ctrl / Shift 可多选。导入时学号已存在的学生会更新姓名和班级。" />
+                    </DockPanel>
+                </Border>
+
+                <Grid>
+                    <DataGrid x:Name="StudentGrid" ItemsSource="{Binding Students}" AutoGenerateColumns="False" IsReadOnly="True"
+                              HeadersVisibility="Column" SelectionMode="Extended" CanUserAddRows="False" CanUserDeleteRows="False"
+                              BorderThickness="0" Background="Transparent" RowHeight="40" MouseDoubleClick="OnGridDoubleClick"
+                              hc:DataGridAttach.ShowRowNumber="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="学号" Binding="{Binding StudentNo}" Width="220" />
+                            <DataGridTextColumn Header="姓名" Binding="{Binding Name}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Style="{StaticResource EmptyHint}" Text="这个班级还没有学生"
+                               Visibility="{Binding Students.Count, Converter={StaticResource HasValueToVis}, ConverterParameter=invert}" />
+                </Grid>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

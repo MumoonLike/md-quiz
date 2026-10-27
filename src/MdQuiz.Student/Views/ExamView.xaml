@@ -1,0 +1,323 @@
+<UserControl x:Class="MdQuiz.Student.Views.ExamView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:ctl="clr-namespace:MdQuiz.Wpf.Controls;assembly=MdQuiz.Wpf"
+             PreviewKeyDown="OnPreviewKeyDown">
+    <UserControl.Resources>
+        <!-- 答题卡题号 -->
+        <Style x:Key="SheetButton" TargetType="Button">
+            <Setter Property="Width" Value="42" />
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border x:Name="Bd" CornerRadius="8" BorderThickness="1.5" BorderBrush="{DynamicResource BorderBrush}" Background="{DynamicResource RegionBrush}">
+                                <TextBlock x:Name="Num" Text="{Binding Number}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource SecondaryTextBrush}" />
+                            </Border>
+                            <Ellipse x:Name="FlagDot" Width="9" Height="9" Fill="{DynamicResource WarningBrush}" Stroke="White" StrokeThickness="1.5"
+                                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-3,0" Visibility="Collapsed" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsAnswered}" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PrimaryBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+                                <Setter TargetName="Num" Property="Foreground" Value="White" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource DarkPrimaryBrush}" />
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="3" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsFlagged}" Value="True">
+                                <Setter TargetName="FlagDot" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <DockPanel>
+        <!-- ============ 顶栏 ============ -->
+        <Border DockPanel.Dock="Top" Background="{DynamicResource RegionBrush}" Padding="28,0" Height="70">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="14" ShadowDepth="1" Direction="270" Opacity="0.08" />
+            </Border.Effect>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Title}" FontSize="17" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding StudentText}" Style="{StaticResource Muted}" FontSize="13" Margin="0,2,0,0" />
+                </StackPanel>
+
+                <!-- 倒计时 -->
+                <Border Grid.Column="1" CornerRadius="22" Padding="22,8" VerticalAlignment="Center">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{DynamicResource LightPrimaryBrush}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ClockWarning}" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource LightDangerBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <Path x:Name="ClockIcon" Data="{StaticResource Icon.ClockOutline}" Width="20" Height="20" Stretch="Uniform" VerticalAlignment="Center">
+                            <Path.Style>
+                                <Style TargetType="Path">
+                                    <Setter Property="Fill" Value="{DynamicResource PrimaryBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ClockWarning}" Value="True">
+                                            <Setter Property="Fill" Value="{DynamicResource DangerBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Path.Style>
+                        </Path>
+                        <TextBlock Text="{Binding ClockText}" FontSize="24" FontWeight="SemiBold" FontFamily="{StaticResource MonoFont}" Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource DarkPrimaryBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ClockWarning}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                        <Path Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center">
+                            <Path.Style>
+                                <Style TargetType="Path">
+                                    <Setter Property="Data" Value="{StaticResource Icon.CloudCheckOutline}" />
+                                    <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SyncState}" Value="1">
+                                            <Setter Property="Data" Value="{StaticResource Icon.CloudSyncOutline}" />
+                                            <Setter Property="Fill" Value="{DynamicResource PrimaryBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SyncState}" Value="2">
+                                            <Setter Property="Data" Value="{StaticResource Icon.LanDisconnect}" />
+                                            <Setter Property="Fill" Value="{DynamicResource WarningBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Path.Style>
+                        </Path>
+                        <TextBlock Text="{Binding SyncText}" Margin="6,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}" />
+                    </StackPanel>
+                    <Button Content="交卷" Style="{StaticResource BigPrimaryButton}" Height="40" Padding="28,0"
+                            hc:IconElement.Geometry="{StaticResource Icon.SendCheckOutline}"
+                            Command="{Binding SubmitCommand}" IsEnabled="{Binding IsSubmitting, Converter={StaticResource Not}}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 时间到 -->
+        <Border DockPanel.Dock="Top" Background="{DynamicResource LightDangerBrush}" Padding="12" Visibility="{Binding TimeUp, Converter={StaticResource BoolToVis}}">
+            <TextBlock Text="考试时间到，正在收卷，请稍候…" HorizontalAlignment="Center" Foreground="{DynamicResource DangerBrush}" FontWeight="SemiBold" />
+        </Border>
+
+        <Grid Margin="24,20,24,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ============ 答题卡 ============ -->
+            <Border Style="{StaticResource Card}" Padding="20,18,12,14">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Margin="0,0,8,14">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding ProgressText}" Style="{StaticResource Muted}" FontSize="13" VerticalAlignment="Center" />
+                            <TextBlock Text="答题卡" Style="{StaticResource SectionTitle}" />
+                        </DockPanel>
+                        <ProgressBar Style="{StaticResource ThinProgress}" Value="{Binding Progress, Mode=OneWay}" Margin="0,10,0,0" Foreground="{DynamicResource SuccessBrush}" />
+                    </StackPanel>
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,10,0,0">
+                        <Border Width="14" Height="14" CornerRadius="3" Background="{DynamicResource PrimaryBrush}" />
+                        <TextBlock Text="已答" Style="{StaticResource Muted}" Margin="5,0,14,0" />
+                        <Border Width="14" Height="14" CornerRadius="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1.5" />
+                        <TextBlock Text="未答" Style="{StaticResource Muted}" Margin="5,0,14,0" />
+                        <Ellipse Width="9" Height="9" Fill="{DynamicResource WarningBrush}" VerticalAlignment="Center" />
+                        <TextBlock Text="已标记" Style="{StaticResource Muted}" Margin="5,0,0,0" />
+                    </StackPanel>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Sections}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,8">
+                                        <TextBlock Text="{Binding Title}" Style="{StaticResource Muted}" Margin="0,0,0,8" />
+                                        <ItemsControl ItemsSource="{Binding Questions}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Button Style="{StaticResource SheetButton}"
+                                                            Command="{Binding DataContext.GoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
+            <!-- ============ 题目 ============ -->
+            <Border Grid.Column="2" Style="{StaticResource Card}" Padding="0">
+                <DockPanel>
+                    <!-- 翻页 -->
+                    <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0" Padding="28,14">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Content="上一题" Style="{StaticResource BigDefaultButton}" Width="130"
+                                    hc:IconElement.Geometry="{StaticResource Icon.ChevronLeft}" Command="{Binding PreviousCommand}"
+                                    IsEnabled="{Binding IsFirst, Converter={StaticResource Not}}" />
+                            <Grid DockPanel.Dock="Right">
+                                <Button Content="下一题" Style="{StaticResource BigPrimaryButton}" Width="130" Command="{Binding NextCommand}"
+                                        Visibility="{Binding IsLast, Converter={StaticResource BoolToVis}, ConverterParameter=invert}" />
+                                <Button Content="检查并交卷" Style="{StaticResource BigSuccessButton}" Width="150" Command="{Binding SubmitCommand}"
+                                        Visibility="{Binding IsLast, Converter={StaticResource BoolToVis}}" />
+                            </Grid>
+                            <ToggleButton HorizontalAlignment="Center" Cursor="Hand" FocusVisualStyle="{x:Null}"
+                                          IsChecked="{Binding Current.IsFlagged}" ToolTip="标记这道题，交卷前提醒你检查">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Bd" CornerRadius="18" Padding="16,8" Background="Transparent">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Path x:Name="Icon" Data="{StaticResource Icon.FlagOutline}" Width="16" Height="16" Stretch="Uniform"
+                                                      Fill="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                                <TextBlock x:Name="Text" Text="标记本题" Margin="6,0,0,0" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SecondaryRegionBrush}" />
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource LightWarningBrush}" />
+                                                <Setter TargetName="Icon" Property="Data" Value="{StaticResource Icon.Flag}" />
+                                                <Setter TargetName="Icon" Property="Fill" Value="{DynamicResource WarningBrush}" />
+                                                <Setter TargetName="Text" Property="Text" Value="已标记" />
+                                                <Setter TargetName="Text" Property="Foreground" Value="{DynamicResource DarkWarningBrush}" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                        </DockPanel>
+                    </Border>
+
+                    <ScrollViewer x:Name="QuestionScroll" VerticalScrollBarVisibility="Auto" DataContext="{Binding Current}">
+                        <StackPanel Margin="36,28,36,28" MaxWidth="980" HorizontalAlignment="Left">
+                            <!-- 题头 -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center">
+                                    <Run Text="第" /><Run Text="{Binding Number, Mode=OneWay}" FontSize="20" Foreground="{DynamicResource PrimaryTextBrush}" /><Run Text="题" />
+                                </TextBlock>
+                                <ctl:Chip Text="{Binding TypeName}" Color="{Binding TypeColor}" Margin="12,0,0,0" />
+                                <TextBlock Text="{Binding ScoreText}" Style="{StaticResource Muted}" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <!-- 题干 -->
+                            <ctl:MarkdownView Markdown="{Binding Stem}" NumberBlanks="True" FontSize="18" BlockSpacing="10" />
+                            <TextBlock Text="{Binding Hint}" Style="{StaticResource Muted}" FontSize="13" Margin="0,12,0,0"
+                                       Visibility="{Binding Hint, Converter={StaticResource HasValueToVis}}" />
+
+                            <!-- 单选 -->
+                            <ItemsControl ItemsSource="{Binding Options}" Margin="0,20,0,0" Visibility="{Binding IsSingle, Converter={StaticResource BoolToVis}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <RadioButton Style="{StaticResource OptionCard}" GroupName="{Binding GroupName}" Tag="{Binding Label}"
+                                                     IsChecked="{Binding IsSelected}">
+                                            <ctl:MarkdownView Markdown="{Binding Text}" FontSize="16" BlockSpacing="4" />
+                                        </RadioButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- 多选 -->
+                            <ItemsControl ItemsSource="{Binding Options}" Margin="0,20,0,0" Visibility="{Binding IsMultiple, Converter={StaticResource BoolToVis}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <ToggleButton Style="{StaticResource OptionCard}" Tag="{Binding Label}" IsChecked="{Binding IsSelected}">
+                                            <ctl:MarkdownView Markdown="{Binding Text}" FontSize="16" BlockSpacing="4" />
+                                        </ToggleButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- 判断 -->
+                            <ItemsControl ItemsSource="{Binding Options}" Margin="0,20,0,0" MaxWidth="560" HorizontalAlignment="Left"
+                                          Visibility="{Binding IsTrueFalse, Converter={StaticResource BoolToVis}}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <RadioButton Style="{StaticResource OptionCard}" GroupName="{Binding GroupName}" Tag="{Binding Label}"
+                                                     IsChecked="{Binding IsSelected}" Margin="0,0,12,0">
+                                            <TextBlock Text="{Binding Text}" FontSize="17" />
+                                        </RadioButton>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- 填空 -->
+                            <ItemsControl ItemsSource="{Binding Blanks}" Margin="0,20,0,0" MaxWidth="720" HorizontalAlignment="Left"
+                                          Visibility="{Binding IsFill, Converter={StaticResource BoolToVis}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <DockPanel Margin="0,0,0,12">
+                                            <Border DockPanel.Dock="Left" Background="{DynamicResource LightPrimaryBrush}" CornerRadius="6" Padding="10,0" Margin="0,0,12,0" MinWidth="72">
+                                                <TextBlock Text="{Binding Label}" Foreground="{DynamicResource DarkPrimaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                            </Border>
+                                            <TextBox Height="44" FontSize="17" Padding="10,0" VerticalContentAlignment="Center"
+                                                     Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}" />
+                                        </DockPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- 简答 -->
+                            <StackPanel Margin="0,20,0,0" Visibility="{Binding IsShort, Converter={StaticResource BoolToVis}}">
+                                <TextBox MinHeight="280" FontSize="16" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                         VerticalContentAlignment="Top" Padding="14,12" Text="{Binding ShortText, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Style="{StaticResource Muted}" HorizontalAlignment="Right" Margin="0,6,0,0">
+                                    <Run Text="已输入 " /><Run Text="{Binding CharCount, Mode=OneWay}" /><Run Text=" 字" />
+                                </TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>MdQuiz.Teacher</RootNamespace>
+    <AssemblyName>MdQuiz.Teacher</AssemblyName>
+    <AssemblyTitle>MdQuiz 教师端</AssemblyTitle>
+    <!-- AnyCPU：32 位和 64 位 Win7/Win10 都能运行 -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- 让 SQLite 的 x86/x64 原生库作为内容文件，dotnet publish 时也会一起输出 -->
+    <ContentSQLiteInteropFiles>true</ContentSQLiteInteropFiles>
+    <CopySQLiteInteropFiles>false</CopySQLiteInteropFiles>
+    <CleanSQLiteInteropFiles>false</CleanSQLiteInteropFiles>
+    <CollectSQLiteInteropFiles>false</CollectSQLiteInteropFiles>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MdQuiz.Core\MdQuiz.Core.csproj" />
+    <ProjectReference Include="..\MdQuiz.Server\MdQuiz.Server.csproj" />
+    <ProjectReference Include="..\MdQuiz.Wpf\MdQuiz.Wpf.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+</Project>

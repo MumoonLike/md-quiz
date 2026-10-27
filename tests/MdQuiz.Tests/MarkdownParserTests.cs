@@ -9,7 +9,7 @@ namespace MdQuiz.Tests
 {
     public class MarkdownParserTests
     {
-        public static string SamplePath => Path.Combine(TestPaths.RepoRoot, "samples", "示例题库.md");
+        public static string SamplePath => Path.Combine(TestPaths.RepoRoot, "samples", "sample-questions.md");
 
         [Fact]
         public void ParsesSampleBank()
@@ -109,6 +109,19 @@ namespace MdQuiz.Tests
                 Assert.Equal(a.Question.Tags, b.Question.Tags);
                 Assert.Equal(a.Score, b.Score);
             }
+        }
+
+        [Fact]
+        public void ReadmeExampleParses()
+        {
+            var readme = File.ReadAllText(Path.Combine(TestPaths.RepoRoot, "README.md"));
+            var start = readme.IndexOf("```markdown\n", System.StringComparison.Ordinal) + "```markdown\n".Length;
+            var end = readme.IndexOf("\n```", start, System.StringComparison.Ordinal);
+            var result = QuestionMarkdown.Parse(readme.Substring(start, end - start));
+            Assert.Equal(5, result.Questions.Count);
+            Assert.All(result.Questions, q => Assert.True(q.IsValid, $"line {q.Line}: {q.Error}"));
+            Assert.Equal(new[] { "TCP", "UDP", "IP", "HTTP" }, result.Questions[1].Question.Options);
+            Assert.Equal("AB", result.Questions[1].Question.Answer);
         }
 
         [Fact]
