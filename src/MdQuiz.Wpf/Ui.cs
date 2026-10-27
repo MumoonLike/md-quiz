@@ -60,8 +60,17 @@ namespace MdQuiz.Wpf
         /// <summary>
         /// 显示消息框。指定当前活动窗口为父窗口，保证在置顶（防作弊全屏）的窗口上方显示。
         /// </summary>
+        /// <summary>无人值守（冒烟测试）模式：消息框不弹出，直接记录并视为“确定”。</summary>
+        public static bool Headless { get; set; }
+
         private static MessageBoxResult Show(string message, string title, MessageBoxButton button, MessageBoxImage icon)
         {
+            if (Headless)
+            {
+                SmokeKit.Step($"[dialog:{icon}] {title}: {message.Replace("\n", " ")}");
+                if (icon == MessageBoxImage.Error) SmokeKit.Error("error dialog shown: " + message);
+                return MessageBoxResult.OK;
+            }
             var owner = ActiveWindow;
             return owner != null && owner.IsVisible
                 ? HcMessageBox.Show(owner, message, title, button, icon, MessageBoxResult.None)

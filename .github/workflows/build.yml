@@ -5,6 +5,11 @@ on:
     branches: ['**']
   pull_request:
   workflow_dispatch:
+    inputs:
+      smoke:
+        description: '同时运行界面冒烟测试（教师端 + 学生端在本机完成一场考试并截图，约 5 分钟）'
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -42,3 +47,41 @@ jobs:
         with:
           name: MdQuiz-Student
           path: publish/MdQuiz-Student
+
+      # ---------- 界面冒烟测试（仅手动触发并勾选时运行） ----------
+      - name: Set screen resolution
+        if: ${{ inputs.smoke }}
+        continue-on-error: true
+        shell: pwsh
+        run: Set-DisplayResolution -Width 1920 -Height 1080 -Force
+
+      - name: UI smoke test
+        if: ${{ inputs.smoke }}
+        shell: pwsh
+        run: |
+          $out = Join-Path $pwd 'smoke'
+          New-Item -ItemType Directory -Force $out | Out-Null
+          $teacher = Start-Process -FilePath publish/MdQuiz-Teacher/MdQuiz.Teacher.exe -ArgumentList @('--smoke', $out) -PassThru
+          $null = $teacher.Handle
+          Start-Sleep -Seconds 8
+          $student = Start-Process -FilePath publish/MdQuiz-Student/MdQuiz.Student.exe -ArgumentList @('--smoke', $out, '--server', '127.0.0.1:47320', '--student', '20240101') -PassThru
+          $null = $student.Handle
+          $finished = $teacher.WaitForExit(600000)
+          $finished = $student.WaitForExit(60000) -and $finished
+          foreach ($log in @('teacher-smoke.log', 'student-smoke.log')) {
+            Write-Host "===== $log ====="
+            if (Test-Path "$out/$log") { Get-Content "$out/$log" } else { Write-Host '(missing)' }
+          }
+          if (-not $finished) {
+            Write-Host 'Smoke test timed out'
+            Stop-Process -Id $teacher.Id, $student.Id -Force -ErrorAction SilentlyContinue
+            exit 1
+          }
+          Write-Host "teacher exit=$($teacher.ExitCode) student exit=$($student.ExitCode)"
+          if ($teacher.ExitCode -ne 0 -or $student.ExitCode -ne 0) { exit 1 }
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() && inputs.smoke }}
+        with:
+          name: smoke-results
+          path: smoke

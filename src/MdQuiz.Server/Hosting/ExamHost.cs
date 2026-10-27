@@ -446,16 +446,21 @@ namespace MdQuiz.Server.Hosting
             }
             var p = s.Record;
             var sameClient = !string.IsNullOrEmpty(req.Token) && req.Token == p.Token;
+            var online = s.Conn != null && s.Conn != conn && !s.Conn.IsClosed;
 
-            if (s.Conn != null && s.Conn != conn && !s.Conn.IsClosed)
+            // 已登录过的学号只能由原来的电脑（持有令牌）继续使用；换电脑必须由老师在监考页面允许（清除令牌）
+            if (!sameClient && !string.IsNullOrEmpty(p.Token))
             {
-                if (!sameClient)
-                {
-                    conn.Send(Packet.Create(PacketTypes.LoginResult, Fail(
-                        $"学号 {no} 已在电脑 {p.Machine ?? "?"}（{p.Ip}）上登录。同一学号不能同时在两台电脑登录，如需换电脑请联系老师。")));
-                    Write(HostLogLevel.Warning, $"{p.Name}（{no}）尝试在 {conn.RemoteAddress} 重复登录，已拒绝");
-                    return;
-                }
+                var where = $"电脑 {p.Machine ?? "?"}（{p.Ip}）";
+                conn.Send(Packet.Create(PacketTypes.LoginResult, Fail(online
+                    ? $"学号 {no} 已在{where}上登录。同一学号不能同时在两台电脑登录。如需换电脑，请举手请老师在监考页面“允许换电脑重新登录”。"
+                    : $"学号 {no} 已在{where}上登录过。如需换电脑，请举手请老师在监考页面“允许换电脑重新登录”。")));
+                Write(HostLogLevel.Warning, $"{p.Name}（{no}）尝试在 {conn.RemoteAddress} 登录，已拒绝（需老师允许换电脑）");
+                return;
+            }
+
+            if (online)
+            {
                 // 同一客户端重连：旧连接作废
                 var old = s.Conn;
                 if (old.Tag is ConnInfo oldInfo) oldInfo.StudentNo = null;

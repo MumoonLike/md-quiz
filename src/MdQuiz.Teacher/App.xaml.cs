@@ -25,9 +25,10 @@ namespace MdQuiz.Teacher
                 args.SetObserved();
             };
 
+            var smoke = SmokeKit.TryInit(e.Args, "teacher");
             try
             {
-                _services = AppServices.Create();
+                _services = AppServices.Create(smoke ? TeacherSmoke.PrepareDataDir() : null);
             }
             catch (Exception ex)
             {
@@ -46,6 +47,13 @@ namespace MdQuiz.Teacher
                     _services.Settings.ClearPassword();
                     Log.Warn("管理密码已通过 --reset-password 清除");
                 }
+            }
+
+            if (smoke)
+            {
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                _ = TeacherSmoke.RunAsync(_services);
+                return;
             }
 
             var login = new LoginWindow(_services);
@@ -77,6 +85,7 @@ namespace MdQuiz.Teacher
         private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             Log.Error("界面异常", e.Exception);
+            if (SmokeKit.Enabled) SmokeKit.Error("unhandled UI exception", e.Exception);
             Ui.Error("操作失败：" + e.Exception.Message);
             e.Handled = true;
         }

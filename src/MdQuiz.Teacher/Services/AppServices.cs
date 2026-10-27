@@ -57,9 +57,9 @@ namespace MdQuiz.Teacher.Services
             set => Settings.Set(SettingsRepository.KeyServerPort, value.ToString());
         }
 
-        public static AppServices Create()
+        public static AppServices Create(string dataDirOverride = null)
         {
-            var dir = AppPaths.ResolveDataDir("Teacher");
+            var dir = dataDirOverride ?? AppPaths.ResolveDataDir("Teacher");
             Log.Init(dir);
             Current = new AppServices(dir);
             return Current;

@@ -358,6 +358,42 @@ namespace MdQuiz.Tests
         }
 
         [Fact]
+        public async Task SwitchingMachineNeedsTeacherEvenWhenOldOneIsOffline()
+        {
+            var (env, examId, _, _) = Setup(new ExamSettings());
+            using (env)
+            using (var host = new ExamHost(env.Db))
+            {
+                host.Start(0, TestEnv.FreeUdpPort());
+                host.OpenExam(examId);
+                var cacheA = Path.Combine(env.Dir, "a");
+                var a = new ExamClient(cacheA, "PC-A");
+                await a.ConnectAsync("127.0.0.1", host.Port);
+                Assert.True((await a.LoginAsync("001")).Ok);
+                a.Dispose();
+                await TaskExt.Until(() => !host.GetParticipants().Single(p => p.StudentNo == "001").Online);
+
+                // 旧电脑已断线，换到另一台电脑仍需老师允许
+                using var b = new ExamClient(Path.Combine(env.Dir, "b"), "PC-B");
+                await b.ConnectAsync("127.0.0.1", host.Port);
+                var denied = await b.LoginAsync("001");
+                Assert.False(denied.Ok);
+                Assert.Contains("老师", denied.Error);
+
+                // 原来的电脑重启程序后可以继续（本地缓存里有登录令牌）
+                using (var again = new ExamClient(cacheA, "PC-A"))
+                {
+                    await again.ConnectAsync("127.0.0.1", host.Port);
+                    Assert.True((await again.LoginAsync("001")).Ok);
+                }
+                await TaskExt.Until(() => !host.GetParticipants().Single(p => p.StudentNo == "001").Online);
+
+                host.ReleaseStudent("001");
+                Assert.True((await b.LoginAsync("001")).Ok);
+            }
+        }
+
+        [Fact]
         public async Task ExamAutoEndsAtDeadlineAndResumesAfterTeacherRestart()
         {
             var (env, examId, _, _) = Setup(new ExamSettings { DurationMinutes = 1 });

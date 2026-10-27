@@ -516,7 +516,8 @@ namespace MdQuiz.Core.Client
             if (string.IsNullOrEmpty(_cacheDir) || examId <= 0 || string.IsNullOrEmpty(studentNo)) return;
             lock (_sync)
             {
-                var name = $"{Sanitize(Host)}_{Port}_{examId}_{Sanitize(studentNo)}.json";
+                // 按教师机名称（而不是地址）区分：同一台教师机无论通过哪个 IP 连接，都能找回登录令牌
+                var name = $"{Sanitize(Welcome?.ServerName ?? Host)}_{examId}_{Sanitize(studentNo)}.json";
                 var path = Path.Combine(_cacheDir, name);
                 if (_cachePath == path && _cache != null) return;
                 _cachePath = path;
