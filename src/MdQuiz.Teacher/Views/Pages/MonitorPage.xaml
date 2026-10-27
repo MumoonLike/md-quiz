@@ -172,12 +172,12 @@
                         <TextBlock Text="应考" Style="{StaticResource Muted}" />
                     </StackPanel>
                 </RadioButton>
-                <RadioButton Style="{StaticResource StatFilter}" Command="{Binding SetFilterCommand}" CommandParameter="absent">
+                <RadioButton Style="{StaticResource StatFilter}" Command="{Binding SetFilterCommand}" CommandParameter="absent" ToolTip="点击查看还没有登录的学生">
                     <StackPanel>
                         <TextBlock Style="{StaticResource BigNumber}">
                             <Run Text="{Binding LoggedIn, Mode=OneWay}" /><Run Text=" / " FontSize="16" Foreground="{DynamicResource ThirdlyTextBrush}" /><Run Text="{Binding Total, Mode=OneWay}" FontSize="16" Foreground="{DynamicResource ThirdlyTextBrush}" />
                         </TextBlock>
-                        <TextBlock Text="已登录（点击查看未登录）" Style="{StaticResource Muted}" />
+                        <TextBlock Text="已登录 / 应考" Style="{StaticResource Muted}" />
                     </StackPanel>
                 </RadioButton>
                 <RadioButton Style="{StaticResource StatFilter}" Command="{Binding SetFilterCommand}" CommandParameter="answering">

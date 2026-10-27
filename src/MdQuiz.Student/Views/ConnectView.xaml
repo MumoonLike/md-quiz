@@ -33,8 +33,8 @@
                         <ItemsControl ItemsSource="{Binding Servers}" Margin="0,18,0,0">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Button Command="{Binding DataContext.ConnectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
-                                            Cursor="Hand" Margin="0,0,0,10" HorizontalContentAlignment="Stretch" FocusVisualStyle="{x:Null}">
+                                    <Button Style="{x:Null}" Command="{Binding DataContext.ConnectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                            Cursor="Hand" Margin="0,0,0,10" HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch" FocusVisualStyle="{x:Null}">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
                                                 <Border x:Name="Bd" Background="{DynamicResource SecondaryRegionBrush}" CornerRadius="10" Padding="18,14"

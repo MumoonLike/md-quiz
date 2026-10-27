@@ -36,7 +36,7 @@ namespace MdQuiz.Teacher.ViewModels
             : P.Status != ParticipantStatus.Submitted ? Palette.Amber
             : P.PendingManual > 0 ? Palette.Violet : Palette.Emerald;
         public string Objective => ScoreConverter.Format(P.ObjectiveScore);
-        public string Subjective => ScoreConverter.Format(P.SubjectiveScore);
+        public string Subjective => P.PendingManual > 0 ? "待批改" : ScoreConverter.Format(P.SubjectiveScore);
         public string Total => ScoreConverter.Format(P.TotalScore);
         public int FocusLost => P.FocusLost;
         public DateTime? SubmittedAt => P.SubmittedAt;

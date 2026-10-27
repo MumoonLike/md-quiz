@@ -69,10 +69,10 @@
                 <Border Style="{StaticResource Card}" Margin="0,14,0,0">
                     <StackPanel>
                         <TextBlock Text="多选题计分" Style="{StaticResource SectionTitle}" Margin="0,0,0,10" />
-                        <RadioButton x:Name="ModeHalf" GroupName="Mode" IsChecked="True" Margin="0,0,0,8"
+                        <RadioButton x:Name="ModeHalf" HorizontalAlignment="Left" GroupName="Mode" IsChecked="True" Margin="0,0,0,8"
                                      Content="少选得一半分，有错选 0 分（推荐）" />
-                        <RadioButton x:Name="ModeAll" GroupName="Mode" Margin="0,0,0,8" Content="与答案完全一致才得分" />
-                        <RadioButton x:Name="ModeProportional" GroupName="Mode" Content="按选对的比例给分，有错选 0 分" />
+                        <RadioButton x:Name="ModeAll" HorizontalAlignment="Left" GroupName="Mode" Margin="0,0,0,8" Content="与答案完全一致才得分" />
+                        <RadioButton x:Name="ModeProportional" HorizontalAlignment="Left" GroupName="Mode" Content="按选对的比例给分，有错选 0 分" />
                     </StackPanel>
                 </Border>
 

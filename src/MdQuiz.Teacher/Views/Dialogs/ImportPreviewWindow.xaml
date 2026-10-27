@@ -15,7 +15,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <CheckBox x:Name="CreatePaperBox" Content="同时用这些题目创建试卷" VerticalAlignment="Center" Checked="OnCreatePaperChanged" Unchecked="OnCreatePaperChanged" />
-                    <TextBox x:Name="PaperNameBox" Width="220" Height="32" Margin="12,0,0,0" IsEnabled="False" hc:InfoElement.Placeholder="试卷名称" />
+                    <hc:TextBox x:Name="PaperNameBox" Width="220" Height="32" Margin="12,0,0,0" IsEnabled="False" hc:InfoElement.Placeholder="试卷名称" />
                 </StackPanel>
             </DockPanel>
         </Border>
@@ -26,7 +26,7 @@
                 <TextBlock x:Name="SummaryHint" Style="{StaticResource Muted}" Margin="0,4,0,12" />
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="给导入的题目加标签" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" Margin="0,0,10,0" />
-                    <TextBox x:Name="TagBox" Width="260" Height="32" hc:InfoElement.Placeholder="可选，例如：第一章" />
+                    <hc:TextBox x:Name="TagBox" Width="260" Height="32" hc:InfoElement.Placeholder="可选，例如：第一章" />
                 </StackPanel>
             </StackPanel>
         </Border>

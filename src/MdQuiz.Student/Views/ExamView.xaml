@@ -204,7 +204,7 @@
                                 <Button Content="检查并交卷" Style="{StaticResource BigSuccessButton}" Width="150" Command="{Binding SubmitCommand}"
                                         Visibility="{Binding IsLast, Converter={StaticResource BoolToVis}}" />
                             </Grid>
-                            <ToggleButton HorizontalAlignment="Center" Cursor="Hand" FocusVisualStyle="{x:Null}"
+                            <ToggleButton Style="{x:Null}" HorizontalAlignment="Center" Cursor="Hand" FocusVisualStyle="{x:Null}"
                                           IsChecked="{Binding Current.IsFlagged}" ToolTip="标记这道题，交卷前提醒你检查">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
@@ -234,7 +234,7 @@
                     </Border>
 
                     <ScrollViewer x:Name="QuestionScroll" VerticalScrollBarVisibility="Auto" DataContext="{Binding Current}">
-                        <StackPanel Margin="36,28,36,28" MaxWidth="980" HorizontalAlignment="Left">
+                        <StackPanel Margin="36,28,36,28" MaxWidth="980">
                             <!-- 题头 -->
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                                 <TextBlock FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center">
@@ -273,7 +273,7 @@
                             </ItemsControl>
 
                             <!-- 判断 -->
-                            <ItemsControl ItemsSource="{Binding Options}" Margin="0,20,0,0" MaxWidth="560" HorizontalAlignment="Left"
+                            <ItemsControl ItemsSource="{Binding Options}" Margin="0,20,0,0" Width="560" HorizontalAlignment="Left"
                                           Visibility="{Binding IsTrueFalse, Converter={StaticResource BoolToVis}}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -291,7 +291,7 @@
                             </ItemsControl>
 
                             <!-- 填空 -->
-                            <ItemsControl ItemsSource="{Binding Blanks}" Margin="0,20,0,0" MaxWidth="720" HorizontalAlignment="Left"
+                            <ItemsControl ItemsSource="{Binding Blanks}" Margin="0,20,0,0"
                                           Visibility="{Binding IsFill, Converter={StaticResource BoolToVis}}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>

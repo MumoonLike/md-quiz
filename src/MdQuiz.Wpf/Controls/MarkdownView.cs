@@ -374,7 +374,7 @@ namespace MdQuiz.Wpf.Controls
                 var formula = new FormulaControl
                 {
                     Formula = tex,
-                    Scale = Math.Round(FontSize * (display ? 1.25 : 1.1)),
+                    Scale = Math.Round(FontSize * (display ? 1.45 : 1.3)),
                     SystemTextFontName = "Microsoft YaHei",
                     Margin = display ? new Thickness(0, 4, 0, 4) : new Thickness(1, 0, 1, 0),
                     HorizontalAlignment = display ? HorizontalAlignment.Center : HorizontalAlignment.Left,

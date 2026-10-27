@@ -81,6 +81,9 @@ namespace MdQuiz.Teacher.Views.Dialogs
         private void AddRule(TypeOption type)
         {
             var row = new RuleRow(_types, _tags, type, ImportPreviewWindow.DefaultScore(type.Type.Value), OnRuleChanged);
+            // 默认抽取数量不超过题库中可用的题目数
+            var available = AppServices.Current.PaperService.CountAvailable(type.Type.Value, null, _exclude);
+            row.Count = Math.Min(5, available);
             _rules.Add(row);
             Recount(row);
         }

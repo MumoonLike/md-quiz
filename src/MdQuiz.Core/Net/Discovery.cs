@@ -80,7 +80,6 @@ namespace MdQuiz.Core.Net
                         if (info == null || info.Magic != ResponseMagic || info.Port <= 0) continue;
                         info.Address = result.RemoteEndPoint.Address.ToString();
                         var key = info.Address + ":" + info.Port;
-                        // 同一台机器可能经回环和网卡各应答一次，优先保留非回环地址
                         if (!found.ContainsKey(key)) found[key] = info;
                     }
                     catch (Exception)
@@ -90,10 +89,11 @@ namespace MdQuiz.Core.Net
                 }
             }
 
-            var list = found.Values.ToList();
-            var nonLoopback = list.Where(i => i.Address != "127.0.0.1").ToList();
-            // 本机既有回环应答又有网卡应答时，去掉回环那条
-            return list.Where(i => i.Address != "127.0.0.1" || !nonLoopback.Any(n => n.ServerName == i.ServerName && n.Port == i.Port && IsLocalAddress(n.Address))).ToList();
+            // 同一台教师机可能从多块网卡（以及本机回环）各应答一次：按名称和端口合并，优先保留非回环地址
+            return found.Values
+                .GroupBy(i => (i.ServerName ?? "") + ":" + i.Port)
+                .Select(g => g.OrderBy(i => i.Address == "127.0.0.1" ? 1 : 0).First())
+                .ToList();
         }
 
         private static IEnumerable<IPAddress> BroadcastTargets()
@@ -173,8 +173,6 @@ namespace MdQuiz.Core.Net
                 // 非 Windows 平台不支持，忽略
             }
         }
-
-        private static bool IsLocalAddress(string address) => LocalIPv4Addresses().Contains(address);
     }
 
     /// <summary>教师端：应答学生端的 UDP 搜索请求。</summary>

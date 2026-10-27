@@ -56,10 +56,10 @@
                                 <Button Content="创建考试" Style="{StaticResource ButtonSuccess}"
                                         hc:IconElement.Geometry="{StaticResource Icon.SendCheckOutline}" Command="{Binding CreateExamCommand}" />
                             </StackPanel>
-                            <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontSize="20" FontWeight="SemiBold"
+                            <hc:TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontSize="20" FontWeight="SemiBold"
                                      BorderThickness="0" Background="Transparent" Padding="0" hc:InfoElement.Placeholder="试卷名称" Margin="0,0,16,0" />
                         </DockPanel>
-                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0,10,0,0"
+                        <hc:TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0,10,0,0"
                                  hc:InfoElement.Placeholder="说明（可选，仅教师可见）" />
 
                         <!-- 统计 -->

@@ -155,7 +155,7 @@
                             <TextBlock Text="解析（可选）" Style="{StaticResource SectionTitle}" Margin="0,0,0,8" />
                             <TextBox Style="{StaticResource MultiLine}" MinHeight="70" Text="{Binding Analysis, UpdateSourceTrigger=PropertyChanged}" />
                             <TextBlock Text="标签（可选，用逗号分隔，用于筛选和随机抽题）" Style="{StaticResource SectionTitle}" Margin="0,16,0,8" />
-                            <TextBox Height="36" Text="{Binding TagsText, UpdateSourceTrigger=PropertyChanged}" hc:InfoElement.Placeholder="例如：数学, 第一章" />
+                            <hc:TextBox Height="36" Text="{Binding TagsText, UpdateSourceTrigger=PropertyChanged}" hc:InfoElement.Placeholder="例如：数学, 第一章" />
                             <ItemsControl ItemsSource="{Binding KnownTags}" Margin="0,8,0,0">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>

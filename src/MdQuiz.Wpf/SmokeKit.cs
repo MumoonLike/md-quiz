@@ -103,14 +103,12 @@ namespace MdQuiz.Wpf
                     Error($"capture {name}: element has no size");
                     return;
                 }
-                var visual = new DrawingVisual();
-                using (var dc = visual.RenderOpen())
-                {
-                    dc.DrawRectangle(Brushes.White, null, new Rect(0, 0, w, h));
-                    dc.DrawRectangle(new VisualBrush(target), null, new Rect(0, 0, w, h));
-                }
+                // 先画白底，再直接渲染窗口内容（VisualBrush 会按内容边界缩放，导致截图变形）
+                var background = new DrawingVisual();
+                using (var dc = background.RenderOpen()) dc.DrawRectangle(Brushes.White, null, new Rect(0, 0, w, h));
                 var bitmap = new RenderTargetBitmap(w, h, 96, 96, PixelFormats.Pbgra32);
-                bitmap.Render(visual);
+                bitmap.Render(background);
+                bitmap.Render(target);
                 var encoder = new PngBitmapEncoder();
                 encoder.Frames.Add(BitmapFrame.Create(bitmap));
                 var file = Path.Combine(OutDir, $"{++_shot:00}-{name}.png");
