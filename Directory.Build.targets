@@ -1,0 +1,20 @@
+<Project>
+  <!--
+    发布时把依赖的 DLL（含 SQLite 的 x86 / x64 原生库）移到 lib 子目录，程序目录只留 exe、配置和资料文件。
+    exe 通过 App.config 中的 <probing privatePath="lib" /> 找到它们；System.Data.SQLite 会在自身所在目录下查找 x86 / x64。
+    在项目中设置 MoveLibsOnPublish=true 启用。
+  -->
+  <Target Name="MoveLibsToSubfolder" AfterTargets="Publish" Condition="'$(MoveLibsOnPublish)' == 'true'">
+    <PropertyGroup>
+      <_LibDir>$(PublishDir)lib\</_LibDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_LibFile Include="$(PublishDir)*.dll;$(PublishDir)*.pdb" Exclude="$(PublishDir)$(TargetName).pdb" />
+      <_LibNativeFile Include="$(PublishDir)x86\**" Arch="x86\" />
+      <_LibNativeFile Include="$(PublishDir)x64\**" Arch="x64\" />
+    </ItemGroup>
+    <Move SourceFiles="@(_LibFile)" DestinationFolder="$(_LibDir)" />
+    <Move SourceFiles="@(_LibNativeFile)" DestinationFiles="@(_LibNativeFile->'$(_LibDir)%(Arch)%(RecursiveDir)%(Filename)%(Extension)')" />
+    <RemoveDir Directories="$(PublishDir)x86;$(PublishDir)x64" />
+  </Target>
+</Project>

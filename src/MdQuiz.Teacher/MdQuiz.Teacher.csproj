@@ -16,6 +16,7 @@
     <CopySQLiteInteropFiles>false</CopySQLiteInteropFiles>
     <CleanSQLiteInteropFiles>false</CleanSQLiteInteropFiles>
     <CollectSQLiteInteropFiles>false</CollectSQLiteInteropFiles>
+    <MoveLibsOnPublish>true</MoveLibsOnPublish>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\MdQuiz.Core\MdQuiz.Core.csproj" />
@@ -25,5 +26,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 随程序一起输出：示例题库与花名册、防火墙放行脚本 -->
+    <None Include="..\..\samples\*" LinkBase="samples" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\..\scripts\firewall-teacher.bat" Link="firewall-teacher.bat" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
