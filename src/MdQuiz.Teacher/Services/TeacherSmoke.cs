@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using MdQuiz.Core.Models;
+using MdQuiz.Server.Mcp;
 using MdQuiz.Server.Services;
 using MdQuiz.Teacher.ViewModels;
 using MdQuiz.Teacher.Views;
@@ -66,6 +69,49 @@ namespace MdQuiz.Teacher.Services
             MainViewModel.Instance.Navigate(key);
             await SmokeKit.Settle(900);
             SmokeKit.Capture(main, name);
+        }
+
+        /// <summary>在 .NET Framework 上启动 MCP 服务，用真实 HTTP 请求调用一次，并截图设置页。</summary>
+        private static async Task CheckMcp(AppServices s, MainWindow main)
+        {
+            s.SaveMcpOptions(new McpOptions { Port = 47330, Permissions = McpPermissions.Read | McpPermissions.Edit });
+            s.McpEnabled = true;
+            MainViewModel.Instance.ApplyMcp(showSuccess: false);
+            if (!s.Mcp.IsRunning)
+            {
+                SmokeKit.Error("mcp server did not start");
+                return;
+            }
+            foreach (var body in new[]
+            {
+                "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\"}}",
+                "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"get_overview\",\"arguments\":{}}}",
+            })
+            {
+                try
+                {
+                    var response = await Task.Run(() =>
+                    {
+                        var request = (HttpWebRequest)WebRequest.Create($"http://127.0.0.1:{s.Mcp.Port}{McpServer.Endpoint}");
+                        request.Method = "POST";
+                        request.ContentType = "application/json";
+                        request.Accept = "application/json, text/event-stream";
+                        var bytes = Encoding.UTF8.GetBytes(body);
+                        using (var stream = request.GetRequestStream()) stream.Write(bytes, 0, bytes.Length);
+                        using (var reply = (HttpWebResponse)request.GetResponse())
+                        using (var reader = new StreamReader(reply.GetResponseStream(), Encoding.UTF8))
+                            return reader.ReadToEnd();
+                    });
+                    SmokeKit.Step("mcp: " + (response.Length > 300 ? response.Substring(0, 300) + "…" : response));
+                    if (!response.Contains("\"result\"") || response.Contains("\"isError\":true")) SmokeKit.Error("mcp call failed: " + response);
+                }
+                catch (Exception ex)
+                {
+                    SmokeKit.Error("mcp request failed", ex);
+                }
+            }
+            await SmokeKit.Settle(500);
+            await Page(main, "settings", "teacher-settings-mcp");
         }
 
         /// <summary>打开考生答卷窗口并截图。</summary>
@@ -137,6 +183,7 @@ namespace MdQuiz.Teacher.Services
             await Page(main, "exams", "teacher-exams");
             await Page(main, "results", "teacher-results-empty");
             await Page(main, "settings", "teacher-settings");
+            await CheckMcp(s, main);
             await Page(main, "monitor", "teacher-monitor-empty");
 
             // ---------- 对话框 ----------

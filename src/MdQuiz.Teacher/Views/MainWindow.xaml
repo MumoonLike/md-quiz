@@ -47,6 +47,22 @@
                         </StackPanel>
                         <TextBlock Text="学生端连接地址" Foreground="#AEB9E8" FontSize="11" Margin="0,8,0,2" />
                         <TextBlock Text="{Binding ServerAddress}" Foreground="White" FontSize="13" FontFamily="{StaticResource MonoFont}" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0" Visibility="{Binding McpStatus, Converter={StaticResource HasValueToVis}}"
+                                    ToolTip="AI 助手可以通过 MCP 协议连接本机（在“设置”中配置）">
+                            <Ellipse Width="7" Height="7" VerticalAlignment="Center">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="#FF8A8A" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding McpRunning}" Value="True">
+                                                <Setter Property="Fill" Value="#A78BFA" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock Text="{Binding McpStatus}" Foreground="#C9D3FA" FontSize="11" Margin="7,0,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 

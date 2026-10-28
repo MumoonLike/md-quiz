@@ -1,7 +1,8 @@
 <UserControl x:Class="MdQuiz.Teacher.Views.Pages.SettingsPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:hc="https://handyorg.github.io/handycontrol">
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:ctl="clr-namespace:MdQuiz.Wpf.Controls;assembly=MdQuiz.Wpf">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel MaxWidth="900" HorizontalAlignment="Left">
             <TextBlock Text="设置" Style="{StaticResource PageTitle}" />
@@ -47,6 +48,166 @@
                     <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0"><Run Text="局域网自动发现：" /><Run Text="{Binding DiscoveryText, Mode=OneWay}" /></TextBlock>
                     <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0"
                                Text="如果学生端连不上，请确认 Windows 防火墙已允许“明点知识考核系统 教师端”，或以管理员身份运行程序目录中的 firewall-teacher.bat。" />
+                </StackPanel>
+            </Border>
+
+            <!-- MCP 服务 -->
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0" Padding="24,20">
+                <StackPanel>
+                    <DockPanel>
+                        <ToggleButton DockPanel.Dock="Right" Style="{StaticResource ToggleButtonSwitch}" IsChecked="{Binding McpEnabled}" VerticalAlignment="Center"
+                                      ToolTip="启用 / 关闭 MCP 服务（点击“保存并应用”后生效）" />
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="MCP 服务（AI 助手接入）" Style="{StaticResource SectionTitle}" />
+                                <ctl:Chip Text="{Binding McpStatusText}" Margin="10,0,0,0">
+                                    <ctl:Chip.Style>
+                                        <Style TargetType="ctl:Chip" BasedOn="{StaticResource {x:Type ctl:Chip}}">
+                                            <Setter Property="Color" Value="#9CA3AF" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding McpRunning}" Value="True">
+                                                    <Setter Property="Color" Value="#8B5CF6" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ctl:Chip.Style>
+                                </ctl:Chip>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0"
+                                       Text="通过 MCP（Model Context Protocol）协议，Claude、Cursor、Cherry Studio 等 AI 客户端可以查询题库和成绩、帮你出题组卷，按下面开放的权限操作考试。" />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <Grid Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="24" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="端口" Style="{StaticResource FieldLabel}" />
+                            <TextBox Text="{Binding McpPort, UpdateSourceTrigger=PropertyChanged}" Height="36" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="访问范围" Style="{StaticResource FieldLabel}" />
+                            <CheckBox IsChecked="{Binding McpAllowLan}" Content="允许局域网中的其他电脑访问（必须使用访问令牌）" Height="36" VerticalContentAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 令牌 -->
+                    <StackPanel Margin="0,12,0,0" Visibility="{Binding McpAllowLan, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="访问令牌（客户端请求头 Authorization: Bearer 令牌）" Style="{StaticResource FieldLabel}" />
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="10,0,0,0">
+                                <Button Content="复制" Style="{StaticResource ButtonDefault}" Height="36" Margin="0,0,8,0"
+                                        hc:IconElement.Geometry="{StaticResource Icon.ContentCopy}" Command="{Binding CopyCommand}" CommandParameter="{Binding McpToken}" />
+                                <Button Content="重新生成" Style="{StaticResource ButtonDefault}" Height="36"
+                                        hc:IconElement.Geometry="{StaticResource Icon.Refresh}" Command="{Binding RegenerateTokenCommand}" />
+                            </StackPanel>
+                            <TextBox Text="{Binding McpToken, Mode=OneWay}" IsReadOnly="True" Height="36" FontFamily="{StaticResource MonoFont}" />
+                        </DockPanel>
+                        <Border Background="{DynamicResource LightWarningBrush}" CornerRadius="6" Padding="12,8" Margin="0,10,0,0">
+                            <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource DarkWarningBrush}"
+                                       Text="学生机和教师机在同一局域网，请妥善保管令牌，不要在投影或学生能看到的地方展示。如需局域网访问，Windows 防火墙需放行该端口（以管理员身份运行 firewall-teacher.bat 会放行本程序的全部端口）。" />
+                        </Border>
+                    </StackPanel>
+
+                    <!-- 权限 -->
+                    <TextBlock Text="开放给 AI 的权限" Style="{StaticResource FieldLabel}" Margin="0,16,0,8" />
+                    <Border Background="{DynamicResource SecondaryRegionBrush}" CornerRadius="8" Padding="14,10">
+                        <StackPanel>
+                            <CheckBox IsChecked="{Binding McpRead}">
+                                <StackPanel Margin="4,0,0,0">
+                                    <TextBlock Text="① 只读查询" FontWeight="SemiBold" />
+                                    <TextBlock Text="查看题库、试卷、学生、考试、成绩、考生答卷、监考状态和逐题分析" Style="{StaticResource Muted}" />
+                                </StackPanel>
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding McpEdit}" Margin="0,10,0,0">
+                                <StackPanel Margin="4,0,0,0">
+                                    <TextBlock Text="② 编辑题库、组卷、创建考试" FontWeight="SemiBold" />
+                                    <TextBlock Text="新增 / 修改 / 删除题目，导入 Markdown 题目，创建和修改试卷、试卷分组，随机组卷，创建考试" Style="{StaticResource Muted}" />
+                                </StackPanel>
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding McpControl}" Margin="0,10,0,0">
+                                <StackPanel Margin="4,0,0,0">
+                                    <TextBlock Text="③ 考试控制与改分" FontWeight="SemiBold" Foreground="{DynamicResource DangerBrush}" />
+                                    <TextBlock Text="开放登录、开始 / 结束 / 关闭考试、加减考试时间、允许换电脑登录、人工改分" Style="{StaticResource Muted}" />
+                                </StackPanel>
+                            </CheckBox>
+                        </StackPanel>
+                    </Border>
+
+                    <DockPanel Margin="0,16,0,0">
+                        <Button DockPanel.Dock="Right" Content="保存并应用" Style="{StaticResource ButtonPrimary}" Height="36"
+                                hc:IconElement.Geometry="{StaticResource Icon.ContentSaveOutline}" Command="{Binding SaveMcpCommand}" />
+                        <TextBlock Text="有未应用的修改" Foreground="{DynamicResource WarningBrush}" VerticalAlignment="Center"
+                                   Visibility="{Binding McpDirty, Converter={StaticResource BoolToVis}}" />
+                    </DockPanel>
+
+                    <!-- 连接方式 -->
+                    <StackPanel Margin="0,18,0,0" Visibility="{Binding McpRunning, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="连接地址（Streamable HTTP；旧版 SSE 客户端把末尾的 /mcp 换成 /sse）" Style="{StaticResource FieldLabel}" />
+                        <ItemsControl ItemsSource="{Binding McpUrls}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="0,0,0,6">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource ButtonIcon}" hc:IconElement.Geometry="{StaticResource Icon.ContentCopy}" ToolTip="复制"
+                                                Foreground="{DynamicResource SecondaryTextBrush}" Width="32" Height="32" Margin="6,0,0,0"
+                                                Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                        <Border Background="{DynamicResource LightPrimaryBrush}" CornerRadius="6" Padding="12,6">
+                                            <TextBlock Text="{Binding}" FontFamily="{StaticResource MonoFont}" FontSize="13" Foreground="{DynamicResource DarkPrimaryBrush}" />
+                                        </Border>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <DockPanel Margin="0,10,0,6">
+                            <Button DockPanel.Dock="Right" Content="复制" Style="{StaticResource LinkButton}" Command="{Binding CopyCommand}" CommandParameter="{Binding McpConfig}" />
+                            <TextBlock Text="客户端配置示例（mcpServers JSON，适用于 Claude Desktop 以外的大多数客户端）" Style="{StaticResource FieldLabel}" Margin="0" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <Border Background="{DynamicResource SecondaryRegionBrush}" CornerRadius="6" Padding="12,8">
+                            <TextBox Text="{Binding McpConfig, Mode=OneWay}" IsReadOnly="True" BorderThickness="0" Background="Transparent" Padding="0"
+                                     FontFamily="{StaticResource MonoFont}" FontSize="12" TextWrapping="Wrap" />
+                        </Border>
+                        <DockPanel Margin="0,10,0,6">
+                            <Button DockPanel.Dock="Right" Content="复制" Style="{StaticResource LinkButton}" Command="{Binding CopyCommand}" CommandParameter="{Binding McpCommand}" />
+                            <TextBlock Text="Claude Code 命令行" Style="{StaticResource FieldLabel}" Margin="0" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <Border Background="{DynamicResource SecondaryRegionBrush}" CornerRadius="6" Padding="12,8">
+                            <TextBox Text="{Binding McpCommand, Mode=OneWay}" IsReadOnly="True" BorderThickness="0" Background="Transparent" Padding="0"
+                                     FontFamily="{StaticResource MonoFont}" FontSize="12" TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+
+                    <!-- 调用记录 -->
+                    <TextBlock Text="最近的调用" Style="{StaticResource FieldLabel}" Margin="0,18,0,6" />
+                    <Border Background="{DynamicResource SecondaryRegionBrush}" CornerRadius="8" Padding="12,8" MaxHeight="220">
+                        <Grid>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding McpLog}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Time}" FontFamily="{StaticResource MonoFont}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                                <ctl:Chip Grid.Column="1" Text="{Binding LevelText}" Color="{Binding Color}" Margin="10,0" />
+                                                <TextBlock Grid.Column="2" FontSize="12" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding Client}">
+                                                    <Run Text="{Binding Title, Mode=OneWay}" FontWeight="SemiBold" /><Run Text="  " /><Run Text="{Binding Message, Mode=OneWay}" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                                </TextBlock>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            <TextBlock Text="还没有调用记录" Style="{StaticResource EmptyHint}" FontSize="12" Margin="0,8"
+                                       Visibility="{Binding McpLog.Count, Converter={StaticResource HasValueToVis}, ConverterParameter=invert}" />
+                        </Grid>
+                    </Border>
                 </StackPanel>
             </Border>
 

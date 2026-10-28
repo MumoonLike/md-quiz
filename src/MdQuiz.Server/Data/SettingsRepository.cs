@@ -10,6 +10,11 @@ namespace MdQuiz.Server.Data
         public const string KeyPassword = "admin.password";
         public const string KeyServerName = "server.name";
         public const string KeyServerPort = "server.port";
+        public const string KeyMcpEnabled = "mcp.enabled";
+        public const string KeyMcpPort = "mcp.port";
+        public const string KeyMcpAllowLan = "mcp.lan";
+        public const string KeyMcpToken = "mcp.token";
+        public const string KeyMcpPermissions = "mcp.permissions";
 
         private readonly Database _db;
 
@@ -39,6 +44,13 @@ namespace MdQuiz.Server.Data
         {
             return int.TryParse(Get(key), NumberStyles.Integer, CultureInfo.InvariantCulture, out var v) ? v : fallback;
         }
+
+        public bool GetBool(string key, bool fallback)
+        {
+            return bool.TryParse(Get(key), out var v) ? v : fallback;
+        }
+
+        public void SetBool(string key, bool value) => Set(key, value ? "true" : "false");
 
         // ---------------- 管理密码 ----------------
 
