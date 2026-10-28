@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using MdQuiz.Core;
 using MdQuiz.Teacher.Services;
 using MdQuiz.Teacher.Views;
 using MdQuiz.Wpf;
@@ -33,7 +34,7 @@ namespace MdQuiz.Teacher
             catch (Exception ex)
             {
                 Log.Error("初始化失败", ex);
-                MessageBox.Show("无法打开数据文件：" + ex.Message, "MdQuiz 教师端", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("无法打开数据文件：" + ex.Message, Brand.TeacherTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(1);
                 return;
             }

@@ -4,9 +4,9 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <Version>0.1.0</Version>
-    <Company>MdQuiz</Company>
-    <Product>MdQuiz 局域网答题系统</Product>
-    <Copyright>MdQuiz</Copyright>
+    <Company>明点知识考核系统</Company>
+    <Product>明点知识考核系统</Product>
+    <Copyright>明点知识考核系统</Copyright>
     <!-- 允许在非 Windows 机器上编译 WPF 项目（只编译，不能运行） -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>

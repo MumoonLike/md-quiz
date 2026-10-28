@@ -249,25 +249,14 @@
                             <TextBlock Text="{Binding Hint}" Style="{StaticResource Muted}" FontSize="13" Margin="0,12,0,0"
                                        Visibility="{Binding Hint, Converter={StaticResource HasValueToVis}}" />
 
-                            <!-- 单选 -->
-                            <ItemsControl ItemsSource="{Binding Options}" Margin="0,20,0,0" Visibility="{Binding IsSingle, Converter={StaticResource BoolToVis}}">
+                            <!-- 单选 / 多选：每道题只生成一组选项按钮，选中状态由 ViewModel 决定 -->
+                            <ItemsControl ItemsSource="{Binding Options}" Margin="0,20,0,0" Visibility="{Binding IsChoice, Converter={StaticResource BoolToVis}}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <RadioButton Style="{StaticResource OptionCard}" GroupName="{Binding GroupName}" Tag="{Binding Label}"
-                                                     IsChecked="{Binding IsSelected}">
+                                        <ctl:ChoiceButton Style="{StaticResource ChoiceCard}" Label="{Binding Label}" IsMultiple="{Binding IsMultiple, Mode=OneWay}"
+                                                          IsSelected="{Binding IsSelected, Mode=OneWay}" Command="{Binding ToggleCommand}">
                                             <ctl:MarkdownView Markdown="{Binding Text}" FontSize="16" BlockSpacing="4" />
-                                        </RadioButton>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <!-- 多选 -->
-                            <ItemsControl ItemsSource="{Binding Options}" Margin="0,20,0,0" Visibility="{Binding IsMultiple, Converter={StaticResource BoolToVis}}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <ToggleButton Style="{StaticResource OptionCard}" Tag="{Binding Label}" IsChecked="{Binding IsSelected}">
-                                            <ctl:MarkdownView Markdown="{Binding Text}" FontSize="16" BlockSpacing="4" />
-                                        </ToggleButton>
+                                        </ctl:ChoiceButton>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -282,10 +271,10 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <RadioButton Style="{StaticResource OptionCard}" GroupName="{Binding GroupName}" Tag="{Binding Label}"
-                                                     IsChecked="{Binding IsSelected}" Margin="0,0,12,0">
+                                        <ctl:ChoiceButton Style="{StaticResource ChoiceCard}" Label="{Binding Label}" IsSelected="{Binding IsSelected, Mode=OneWay}"
+                                                          Command="{Binding ToggleCommand}" Margin="0,0,12,0">
                                             <TextBlock Text="{Binding Text}" FontSize="17" />
-                                        </RadioButton>
+                                        </ctl:ChoiceButton>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

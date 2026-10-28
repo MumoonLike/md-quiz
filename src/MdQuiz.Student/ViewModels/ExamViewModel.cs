@@ -31,11 +31,12 @@ namespace MdQuiz.Student.ViewModels
         /// <summary>显示的字母（按显示顺序 A、B、C…）。</summary>
         public string Label { get; }
         public string Text { get; }
-        public string GroupName => "q" + _owner.Id;
+        public bool IsMultiple => _owner.IsMultiple;
 
         [ObservableProperty] private bool _isSelected;
 
-        partial void OnIsSelectedChanged(bool value) => _owner.OnChoiceChanged(this);
+        [RelayCommand]
+        private void Toggle() => _owner.Choose(this);
     }
 
     public partial class BlankVm : ObservableObject
@@ -102,6 +103,7 @@ namespace MdQuiz.Student.ViewModels
 
         public bool IsSingle => Type == QuestionType.Single;
         public bool IsMultiple => Type == QuestionType.Multiple;
+        public bool IsChoice => Type == QuestionType.Single || Type == QuestionType.Multiple;
         public bool IsTrueFalse => Type == QuestionType.TrueFalse;
         public bool IsFill => Type == QuestionType.FillBlank;
         public bool IsShort => Type == QuestionType.ShortAnswer;
@@ -115,37 +117,24 @@ namespace MdQuiz.Student.ViewModels
         [ObservableProperty] private bool _isCurrent;
         [ObservableProperty] private int _charCount;
 
-        private void Exclusive(Action action)
-        {
-            _loading = true;
-            try
-            {
-                action();
-            }
-            finally
-            {
-                _loading = false;
-            }
-        }
-
         partial void OnShortTextChanged(string value)
         {
             CharCount = (value ?? "").Length;
             OnTextChanged();
         }
 
-        internal void OnChoiceChanged(OptionVm option)
+        /// <summary>点击选项：多选题切换该选项；单选、判断题选中该选项并取消其他选项（再次点击已选项保持选中）。</summary>
+        internal void Choose(OptionVm option)
         {
-            if (_loading) return;
-            if (Type == QuestionType.Single || Type == QuestionType.TrueFalse)
+            if (option == null || !Options.Contains(option)) return;
+            if (Type == QuestionType.Multiple)
             {
-                // RadioButton 取消旧选项的通知可能晚于新选项：只在“选中”时上报，并先手动取消其他选项
-                if (!option.IsSelected) return;
-                Exclusive(() =>
-                {
-                    foreach (var o in Options)
-                        if (o != option) o.IsSelected = false;
-                });
+                option.IsSelected = !option.IsSelected;
+            }
+            else
+            {
+                if (option.IsSelected) return;
+                foreach (var o in Options) o.IsSelected = o == option;
             }
             Changed(false);
         }

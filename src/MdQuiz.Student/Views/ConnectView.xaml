@@ -11,12 +11,12 @@
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,40">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,26">
-                    <Border Width="52" Height="52" CornerRadius="14" Background="#33FFFFFF">
-                        <Path Data="{StaticResource Icon.SchoolOutline}" Fill="White" Width="28" Height="28" Stretch="Uniform" />
+                    <Border Style="{StaticResource LogoTile}" Width="56" Height="56" CornerRadius="14" Padding="9">
+                        <Image Source="{StaticResource LogoImage}" />
                     </Border>
                     <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="MdQuiz" Foreground="White" FontSize="26" FontWeight="Bold" />
-                        <TextBlock Text="局域网答题系统 · 学生端" Foreground="#DCE3FF" FontSize="13" />
+                        <TextBlock Text="明点知识考核系统" Foreground="White" FontSize="26" FontWeight="Bold" />
+                        <TextBlock Text="局域网考试 · 学生端" Foreground="#DCE3FF" FontSize="13" />
                     </StackPanel>
                 </StackPanel>
 

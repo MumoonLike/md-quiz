@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation.Provider;
+using System.Windows.Media;
 using MdQuiz.Core.Models;
 using MdQuiz.Core.Net;
 using MdQuiz.Student.ViewModels;
 using MdQuiz.Wpf;
+using MdQuiz.Wpf.Controls;
 
 namespace MdQuiz.Student
 {
@@ -91,11 +95,19 @@ namespace MdQuiz.Student
                 {
                     case QuestionType.Single:
                     case QuestionType.TrueFalse:
-                        q.Options[0].IsSelected = true;
+                        // 通过界面上的选项按钮点击（与学生实际操作一致）
+                        Click(main, q.Options[1]);
+                        Click(main, q.Options[0]);
+                        await SmokeKit.Settle(200);
+                        if (q.GetValues().Count != 1 || q.GetValues()[0] != q.Options[0].Key)
+                            SmokeKit.Error($"question {q.Number}: single choice selection is wrong: {string.Join(",", q.GetValues())}");
                         break;
                     case QuestionType.Multiple:
-                        q.Options[0].IsSelected = true;
-                        q.Options[1].IsSelected = true;
+                        Click(main, q.Options[0]);
+                        Click(main, q.Options[1]);
+                        await SmokeKit.Settle(200);
+                        if (q.GetValues().Count != 2)
+                            SmokeKit.Error($"question {q.Number}: multiple choice kept {q.GetValues().Count} options, expected 2");
                         break;
                     case QuestionType.FillBlank:
                         foreach (var b in q.Blanks) b.Text = "北京";
@@ -123,6 +135,30 @@ namespace MdQuiz.Student
             await SmokeKit.WaitUntil(() => vm.Screen == Screen.Result, 20000, "result screen");
             await SmokeKit.Settle(1200);
             SmokeKit.Capture(main, "student-result");
+        }
+
+        /// <summary>找到界面上该选项对应的可见按钮，用自动化接口模拟点击。</summary>
+        private static void Click(Window main, OptionVm option)
+        {
+            var button = FindVisual<ChoiceButton>(main, b => b.DataContext == option && b.IsVisible);
+            if (button == null)
+            {
+                SmokeKit.Error("option button not found: " + option.Label);
+                return;
+            }
+            if (new ButtonAutomationPeer(button).GetPattern(PatternInterface.Invoke) is IInvokeProvider invoke) invoke.Invoke();
+        }
+
+        private static T FindVisual<T>(DependencyObject root, Func<T, bool> match) where T : DependencyObject
+        {
+            for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+            {
+                var child = VisualTreeHelper.GetChild(root, i);
+                if (child is T t && match(t)) return t;
+                var found = FindVisual(child, match);
+                if (found != null) return found;
+            }
+            return null;
         }
     }
 }

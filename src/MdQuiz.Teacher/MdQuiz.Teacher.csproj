@@ -5,7 +5,8 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>MdQuiz.Teacher</RootNamespace>
     <AssemblyName>MdQuiz.Teacher</AssemblyName>
-    <AssemblyTitle>MdQuiz 教师端</AssemblyTitle>
+    <AssemblyTitle>明点知识考核系统 教师端</AssemblyTitle>
+    <ApplicationIcon>..\MdQuiz.Wpf\Assets\logo.ico</ApplicationIcon>
     <!-- AnyCPU：32 位和 64 位 Win7/Win10 都能运行 -->
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>

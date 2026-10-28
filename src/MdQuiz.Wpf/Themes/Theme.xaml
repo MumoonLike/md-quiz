@@ -9,6 +9,7 @@
         <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml" />
         <ResourceDictionary Source="pack://application:,,,/MdQuiz.Wpf;component/Themes/Palette.xaml" />
         <ResourceDictionary Source="pack://application:,,,/MdQuiz.Wpf;component/Themes/Icons.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/MdQuiz.Wpf;component/Themes/Brand.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <!-- ============ 转换器 ============ -->
@@ -191,7 +192,7 @@
     </Style>
 
     <!-- ============ 选项卡片（学生答题） ============ -->
-    <Style x:Key="OptionCard" TargetType="ToggleButton">
+    <Style x:Key="ChoiceCard" TargetType="ctl:ChoiceButton">
         <Setter Property="Background" Value="{DynamicResource RegionBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -203,33 +204,49 @@
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="ToggleButton">
+                <ControlTemplate TargetType="ctl:ChoiceButton">
                     <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="1.5" CornerRadius="10" Padding="{TemplateBinding Padding}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Border x:Name="Badge" Width="32" Height="32" CornerRadius="16" VerticalAlignment="Top"
                                     Background="{DynamicResource SecondaryRegionBrush}">
-                                <TextBlock x:Name="Letter" Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
+                                <TextBlock x:Name="Letter" Text="{TemplateBinding Label}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold"
                                            Foreground="{DynamicResource SecondaryTextBrush}" />
                             </Border>
                             <ContentPresenter Grid.Column="1" Margin="14,4,0,0" VerticalAlignment="Center" />
+                            <Path x:Name="Tick" Grid.Column="2" Data="{StaticResource Icon.Check}" Width="18" Height="18" Stretch="Uniform" Margin="12,0,0,0"
+                                  Fill="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" Visibility="Collapsed" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="IsMultiple" Value="True">
+                            <Setter TargetName="Badge" Property="CornerRadius" Value="7" />
+                        </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource SecondaryBorderBrush}" />
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}" />
                         </Trigger>
-                        <Trigger Property="IsChecked" Value="True">
+                        <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource LightPrimaryBrush}" />
                             <Setter TargetName="Badge" Property="Background" Value="{DynamicResource PrimaryBrush}" />
                             <Setter TargetName="Letter" Property="Foreground" Value="White" />
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsSelected" Value="True" />
+                                <Condition Property="IsMultiple" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
+                        </MultiTrigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Opacity" Value="0.85" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Bd" Property="Opacity" Value="0.7" />
