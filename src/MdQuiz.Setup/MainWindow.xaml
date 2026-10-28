@@ -1,0 +1,264 @@
+<Window x:Class="MdQuiz.Setup.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:t="clr-namespace:MdQuiz.Setup.Themes"
+        Width="640" Height="480"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen"
+        Icon="pack://application:,,,/Assets/logo.ico"
+        FontFamily="{StaticResource AppFont}" FontSize="13" Foreground="{StaticResource TextBrush}"
+        Language="zh-CN" TextOptions.TextFormattingMode="Display" UseLayoutRounding="True">
+    <!-- 无边框圆角窗口：外圈 14 像素留给阴影 -->
+    <Grid Margin="14">
+        <!-- 阴影单独一层，不影响内容的文字渲染 -->
+        <Border CornerRadius="12" Background="White">
+            <Border.Effect>
+                <DropShadowEffect Color="#1A2556" BlurRadius="22" ShadowDepth="4" Direction="270" Opacity="0.3" />
+            </Border.Effect>
+        </Border>
+
+        <Grid x:Name="Root" Background="White">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="196" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- ========== 顶部品牌区 ========== -->
+            <Grid Grid.Row="0" Background="{StaticResource HeroBrush}" MouseLeftButtonDown="OnHeroMouseDown">
+                <Canvas IsHitTestVisible="False">
+                    <Ellipse Canvas.Left="420" Canvas.Top="-110" Width="300" Height="300" Stroke="#14FFFFFF" StrokeThickness="46" />
+                    <Ellipse Canvas.Left="486" Canvas.Top="96" Width="150" Height="150" Fill="#0FFFFFFF" />
+                    <Ellipse Canvas.Left="-46" Canvas.Top="136" Width="120" Height="120" Fill="#0AFFFFFF" />
+                    <Ellipse Canvas.Left="372" Canvas.Top="30" Width="10" Height="10" Fill="#33FFFFFF" />
+                    <Ellipse Canvas.Left="398" Canvas.Top="150" Width="6" Height="6" Fill="#2EFFFFFF" />
+                </Canvas>
+
+                <StackPanel Margin="44,0,0,4" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Grid Width="84" Height="84">
+                        <Border CornerRadius="20" Background="White" Margin="4">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#0B1440" BlurRadius="18" ShadowDepth="5" Direction="270" Opacity="0.35" />
+                            </Border.Effect>
+                        </Border>
+                        <Border CornerRadius="20" Background="White" Padding="15">
+                            <Image Source="{StaticResource LogoImage}" />
+                        </Border>
+                    </Grid>
+                    <StackPanel Margin="22,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="明点知识考核系统" FontSize="28" FontWeight="Bold" Foreground="White" />
+                        <StackPanel Margin="0,9,0,0" Orientation="Horizontal">
+                            <Border CornerRadius="11" Background="#30FFFFFF" Padding="10,2,10,3">
+                                <TextBlock x:Name="EditionText" Text="教师端" Foreground="White" FontSize="13" />
+                            </Border>
+                            <TextBlock x:Name="VersionText" Margin="10,0,0,0" VerticalAlignment="Center" Foreground="#CCFFFFFF" FontSize="13" />
+                        </StackPanel>
+                        <TextBlock x:Name="TaglineText" Margin="0,10,0,0" Foreground="#B3FFFFFF" FontSize="13" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Margin="0,8,8,0" HorizontalAlignment="Right" VerticalAlignment="Top" Orientation="Horizontal">
+                    <Button Style="{StaticResource CaptionButton}" Click="OnMinimizeClick" ToolTip="最小化">
+                        <Path Style="{StaticResource Icon}" Width="12" Height="12" Data="{StaticResource Icon.Minus}" />
+                    </Button>
+                    <Button x:Name="CloseButton" Margin="2,0,0,0" Style="{StaticResource CloseCaptionButton}" Click="OnCloseClick" ToolTip="关闭">
+                        <Path Style="{StaticResource Icon}" Width="12" Height="12" Data="{StaticResource Icon.Close}" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- ========== 页面 ========== -->
+            <Grid x:Name="Pages" Grid.Row="1" Margin="44,22,44,24">
+
+                <!-- 欢迎：一键安装 -->
+                <Grid x:Name="WelcomePage">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <ItemsControl x:Name="FeatureList" Grid.Row="0" Focusable="False">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Rows="1" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel HorizontalAlignment="Center">
+                                    <Border Width="40" Height="40" CornerRadius="12" Background="{StaticResource LightPrimaryBrush}" HorizontalAlignment="Center">
+                                        <Path Style="{StaticResource Icon}" Width="21" Height="21" Fill="{StaticResource PrimaryBrush}" Data="{Binding Geometry}" />
+                                    </Border>
+                                    <TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" FontWeight="SemiBold" Text="{Binding Title}" />
+                                    <TextBlock Margin="0,3,0,0" HorizontalAlignment="Center" FontSize="12" Foreground="{StaticResource SecondaryTextBrush}" Text="{Binding Detail}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Border x:Name="UpgradeNotice" Grid.Row="0" Visibility="Collapsed" CornerRadius="8" Background="{StaticResource LightPrimaryBrush}" Padding="12,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Path Style="{StaticResource Icon}" Fill="{StaticResource PrimaryBrush}" VerticalAlignment="Top" Margin="0,1,0,0" Data="{StaticResource Icon.InformationOutline}" />
+                            <TextBlock x:Name="UpgradeText" Grid.Column="1" Margin="8,0,0,0" TextWrapping="Wrap" LineHeight="20" Foreground="{StaticResource DarkPrimaryBrush}" />
+                        </Grid>
+                    </Border>
+                    <Button x:Name="InstallButton" Grid.Row="2" Width="260" HorizontalAlignment="Center" Style="{StaticResource HeroButton}" Content="立即安装" Click="OnInstallClick" />
+                    <DockPanel Grid.Row="3" Margin="0,16,0,0">
+                        <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Click="OnCustomizeClick">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="自定义安装" />
+                                <Path Style="{StaticResource Icon}" Width="14" Height="14" Margin="1,1,0,0" Data="{StaticResource Icon.ChevronRight}" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock x:Name="WelcomePathText" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource ThirdlyTextBrush}" TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
+                </Grid>
+
+                <!-- 自定义安装：位置与选项 -->
+                <Grid x:Name="OptionsPage" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="安装位置" />
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="PathBox" TextChanged="OnPathChanged" />
+                            <Button x:Name="BrowseButton" Grid.Column="1" Margin="8,0,0,0" Height="36" Padding="14,0" Style="{StaticResource SecondaryButton}" Click="OnBrowseClick">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Style="{StaticResource Icon}" Data="{StaticResource Icon.FolderOpenOutline}" />
+                                    <TextBlock Margin="6,0,0,0" Text="浏览…" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        <TextBlock x:Name="PathInfo" Margin="2,8,0,0" FontSize="12" Foreground="{StaticResource SecondaryTextBrush}" TextWrapping="Wrap" />
+                        <WrapPanel Margin="0,16,0,0">
+                            <CheckBox x:Name="DesktopCheck" Margin="0,0,28,0" Content="创建桌面快捷方式" />
+                            <CheckBox x:Name="FirewallCheck" Content="添加 Windows 防火墙例外（学生机需要连接本机）" />
+                        </WrapPanel>
+                    </StackPanel>
+                    <DockPanel VerticalAlignment="Bottom">
+                        <Button DockPanel.Dock="Left" Style="{StaticResource LinkButton}" Click="OnBackClick">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource Icon}" Width="14" Height="14" Margin="0,1,1,0" Data="{StaticResource Icon.ChevronLeft}" />
+                                <TextBlock Text="返回" />
+                            </StackPanel>
+                        </Button>
+                        <Button x:Name="OptionsInstallButton" Width="132" HorizontalAlignment="Right" Style="{StaticResource PrimaryButton}" Content="立即安装" Click="OnInstallClick" />
+                    </DockPanel>
+                </Grid>
+
+                <!-- 进度（安装、卸载共用） -->
+                <Grid x:Name="ProgressPage" Visibility="Collapsed">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock x:Name="PercentText" DockPanel.Dock="Right" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource PrimaryBrush}" Text="0%" />
+                            <TextBlock x:Name="ProgressTitle" FontSize="15" FontWeight="SemiBold" Text="正在安装…" />
+                        </DockPanel>
+                        <ProgressBar x:Name="Progress" Margin="0,12,0,0" Maximum="100" />
+                        <TextBlock x:Name="ProgressStatus" Margin="0,10,0,0" FontSize="12" Foreground="{StaticResource ThirdlyTextBrush}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <Border x:Name="TipCard" VerticalAlignment="Bottom" CornerRadius="10" Background="{StaticResource RegionBrush}" BorderBrush="#EEF0F5" BorderThickness="1" Padding="14,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource LightWarningBrush}" VerticalAlignment="Center">
+                                <Path Style="{StaticResource Icon}" Width="17" Height="17" Fill="{StaticResource WarningBrush}" Data="{StaticResource Icon.LightbulbOutline}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                                <TextBlock FontSize="12" Foreground="{StaticResource ThirdlyTextBrush}" Text="小提示" />
+                                <TextBlock x:Name="TipText" Margin="0,2,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- 完成（安装、卸载共用） -->
+                <Grid x:Name="DonePage" Visibility="Collapsed">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top">
+                        <Grid Width="56" Height="56" HorizontalAlignment="Center">
+                            <Ellipse Fill="{StaticResource LightSuccessBrush}" />
+                            <Path Style="{StaticResource Icon}" Width="36" Height="36" Fill="{StaticResource SuccessBrush}" Data="{StaticResource Icon.CheckCircle}" />
+                        </Grid>
+                        <TextBlock x:Name="DoneTitle" Margin="0,12,0,0" HorizontalAlignment="Center" FontSize="20" FontWeight="SemiBold" Text="安装完成" />
+                        <TextBlock x:Name="DoneDetail" Margin="0,6,0,0" MaxWidth="500" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" LineHeight="19"
+                                   FontSize="12" Foreground="{StaticResource SecondaryTextBrush}" />
+                    </StackPanel>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Orientation="Horizontal">
+                        <Button x:Name="FinishButton" Width="120" Style="{StaticResource SecondaryButton}" Content="完成" Click="OnFinishClick" />
+                        <Button x:Name="LaunchButton" Width="140" Margin="12,0,0,0" Style="{StaticResource PrimaryButton}" Content="立即启动" Click="OnLaunchClick" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- 出错（安装、卸载共用） -->
+                <Grid x:Name="ErrorPage" Visibility="Collapsed">
+                    <Grid VerticalAlignment="Top">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid Width="44" Height="44" VerticalAlignment="Top">
+                            <Ellipse Fill="{StaticResource LightDangerBrush}" />
+                            <Path Style="{StaticResource Icon}" Width="26" Height="26" Fill="{StaticResource DangerBrush}" Data="{StaticResource Icon.AlertCircleOutline}" />
+                        </Grid>
+                        <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                            <TextBlock x:Name="ErrorTitle" Margin="0,2,0,0" FontSize="17" FontWeight="SemiBold" Text="安装没有完成" />
+                            <TextBox x:Name="ErrorMessage" Margin="0,6,0,0" MaxHeight="96" Style="{StaticResource SelectableText}" />
+                        </StackPanel>
+                    </Grid>
+                    <DockPanel VerticalAlignment="Bottom">
+                        <Button DockPanel.Dock="Left" Style="{StaticResource LinkButton}" Content="查看日志" Click="OnViewLogClick" />
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                            <Button Width="100" Style="{StaticResource SecondaryButton}" Content="关闭" Click="OnCloseClick" />
+                            <Button x:Name="RetryButton" Width="110" Margin="10,0,0,0" Style="{StaticResource PrimaryButton}" Content="重试" Click="OnRetryClick" />
+                        </StackPanel>
+                    </DockPanel>
+                </Grid>
+
+                <!-- 卸载确认 -->
+                <Grid x:Name="UninstallPage" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock x:Name="UninstallTitle" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock x:Name="UninstallDetail" Margin="0,8,0,0" FontSize="12.5" LineHeight="20" Foreground="{StaticResource SecondaryTextBrush}" TextWrapping="Wrap" />
+                        <CheckBox x:Name="DeleteDataCheck" Margin="0,16,0,0" Style="{StaticResource DangerCheckBox}" Checked="OnDeleteDataChanged" Unchecked="OnDeleteDataChanged">
+                            <TextBlock x:Name="DeleteDataText" TextWrapping="Wrap" />
+                        </CheckBox>
+                        <Border x:Name="DeleteDataWarning" Margin="25,8,0,0" Visibility="Collapsed" CornerRadius="6" Background="{StaticResource LightDangerBrush}" Padding="10,6">
+                            <TextBlock x:Name="DeleteDataWarningText" FontSize="12" Foreground="{StaticResource DarkDangerBrush}" TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal">
+                        <Button Width="100" Style="{StaticResource SecondaryButton}" Content="取消" Click="OnCloseClick" />
+                        <Button x:Name="UninstallButton" Width="110" Margin="10,0,0,0" Style="{StaticResource DangerButton}" Content="卸载" Click="OnUninstallClick" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <!-- ========== 窗口内的确认对话框 ========== -->
+            <Grid x:Name="Overlay" Grid.RowSpan="2" Visibility="Collapsed" Background="#8C141C40">
+                <Border Width="420" HorizontalAlignment="Center" VerticalAlignment="Center" CornerRadius="12" Background="White" Padding="24,22,24,20">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Path x:Name="DialogIcon" Style="{StaticResource Icon}" Width="22" Height="22" Fill="{StaticResource WarningBrush}" Data="{StaticResource Icon.AlertCircleOutline}" />
+                            <TextBlock x:Name="DialogTitle" Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" FontSize="16" FontWeight="SemiBold" />
+                        </Grid>
+                        <TextBlock x:Name="DialogMessage" Margin="32,10,0,0" LineHeight="20" Foreground="{StaticResource SecondaryTextBrush}" TextWrapping="Wrap" />
+                        <StackPanel Margin="0,22,0,0" HorizontalAlignment="Right" Orientation="Horizontal">
+                            <Button x:Name="DialogCancel" Style="{StaticResource SecondaryButton}" Content="取消" Click="OnDialogCancel" />
+                            <Button x:Name="DialogOk" Margin="10,0,0,0" Style="{StaticResource PrimaryButton}" Click="OnDialogOk" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

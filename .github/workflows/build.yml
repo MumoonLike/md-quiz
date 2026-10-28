@@ -30,13 +30,16 @@ jobs:
       - name: Publish student
         run: dotnet publish src/MdQuiz.Student/MdQuiz.Student.csproj -c Release -o publish/MdQuiz-Student
 
-      - name: Add samples and scripts
+      # 示例文件和 firewall-teacher.bat 由教师端项目随发布输出；依赖 DLL 发布后移到 lib 子目录
+      - name: Remove debug files
         shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force publish/MdQuiz-Teacher/samples | Out-Null
-          Copy-Item samples/* publish/MdQuiz-Teacher/samples/
-          Copy-Item scripts/firewall-teacher.bat publish/MdQuiz-Teacher/
-          Get-ChildItem publish -Recurse -Include *.pdb,*.xml | Remove-Item
+        run: Get-ChildItem publish -Recurse -Include *.pdb,*.xml | Remove-Item
+
+      - name: Build teacher installer
+        run: dotnet build src/MdQuiz.Setup/MdQuiz.Setup.csproj -c Release -p:SetupProduct=Teacher
+
+      - name: Build student installer
+        run: dotnet build src/MdQuiz.Setup/MdQuiz.Setup.csproj -c Release -p:SetupProduct=Student
 
       - uses: actions/upload-artifact@v4
         with:
@@ -47,6 +50,50 @@ jobs:
         with:
           name: MdQuiz-Student
           path: publish/MdQuiz-Student
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MdQuiz-Setup
+          path: |
+            publish/MdQuiz-Teacher-Setup-*.exe
+            publish/MdQuiz-Student-Setup-*.exe
+
+      # ---------- 安装程序：界面截图 + 静默安装 / 启动 / 卸载检查（约 2 分钟） ----------
+      - name: Installer screenshots
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $out = Join-Path $pwd 'setup-screenshots'
+          New-Item -ItemType Directory -Force $out | Out-Null
+          foreach ($product in 'Teacher', 'Student') {
+            $setup = (Get-Item "publish/MdQuiz-$product-Setup-*.exe").FullName
+            $p = Start-Process -FilePath $setup -ArgumentList @('--smoke', $out) -PassThru -Wait
+            Get-Content (Join-Path $out "setup-$($product.ToLower())-smoke.log")
+            if ($p.ExitCode -ne 0) { Write-Host "$product installer smoke exit=$($p.ExitCode)"; exit 1 }
+          }
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: setup-screenshots
+          path: setup-screenshots
+          if-no-files-found: ignore
+
+      - name: Test teacher installer
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $setup = (Get-Item publish/MdQuiz-Teacher-Setup-*.exe).FullName
+          pwsh -NoProfile -File tests/setup-test.ps1 -Product Teacher -Setup $setup
+          exit $LASTEXITCODE
+
+      - name: Test student installer
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $setup = (Get-Item publish/MdQuiz-Student-Setup-*.exe).FullName
+          pwsh -NoProfile -File tests/setup-test.ps1 -Product Student -Setup $setup
+          exit $LASTEXITCODE
 
       # ---------- 界面冒烟测试（仅手动触发并勾选时运行） ----------
       - name: Set screen resolution

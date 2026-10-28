@@ -1,0 +1,77 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    安装程序。同一个项目按 SetupProduct（Teacher / Student，默认 Teacher）分别编译，
+    把已发布的程序目录（PayloadDir，默认 publish/MdQuiz-<产品>）打包成 payload.zip 嵌入 exe，
+    生成 publish/MdQuiz-<产品>-Setup-<版本>.exe。安装程序只依赖 .NET Framework 自带的程序集，单个 exe 即可分发。
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>MdQuiz.Setup</RootNamespace>
+    <AssemblyName>MdQuiz.Setup</AssemblyName>
+    <ApplicationIcon>..\MdQuiz.Wpf\Assets\logo.ico</ApplicationIcon>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <DefineConstants>$(DefineConstants);SETUP_$(SetupProduct.ToUpperInvariant())</DefineConstants>
+    <!-- 只分发 exe：不生成 .exe.config，让它在任何 .NET Framework 4.x 上都能启动，再由程序自己检查是否已装 4.8 -->
+    <GenerateSupportedRuntime>false</GenerateSupportedRuntime>
+    <!-- obj、bin 下按产品分了子目录，排除全部，避免把另一个产品生成的代码也编译进来 -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj\**;bin\**</DefaultItemExcludes>
+    <PayloadDir Condition="'$(PayloadDir)' == ''">$(MSBuildThisFileDirectory)..\..\publish\MdQuiz-$(SetupProduct)\</PayloadDir>
+    <PayloadDir>$([MSBuild]::EnsureTrailingSlash('$(PayloadDir)'))</PayloadDir>
+    <SetupOutputDir Condition="'$(SetupOutputDir)' == ''">$(MSBuildThisFileDirectory)..\..\publish\</SetupOutputDir>
+    <SetupOutputDir>$([MSBuild]::EnsureTrailingSlash('$(SetupOutputDir)'))</SetupOutputDir>
+    <SetupFileName>MdQuiz-$(SetupProduct)-Setup-$(Version).exe</SetupFileName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SetupProduct)' == 'Teacher'">
+    <AssemblyTitle>明点知识考核系统 教师端 安装程序</AssemblyTitle>
+    <PayloadExe>MdQuiz.Teacher.exe</PayloadExe>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(SetupProduct)' == 'Student'">
+    <AssemblyTitle>明点知识考核系统 学生端 安装程序</AssemblyTitle>
+    <PayloadExe>MdQuiz.Student.exe</PayloadExe>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\MdQuiz.Core\Brand.cs" Link="Brand.cs" />
+    <Resource Include="..\MdQuiz.Wpf\Assets\logo.ico" Link="Assets\logo.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Target Name="CheckSetupProduct" BeforeTargets="BeforeBuild">
+    <Error Condition="'$(PayloadExe)' == ''" Text="SetupProduct 只能是 Teacher 或 Student（当前：$(SetupProduct)）" />
+  </Target>
+
+  <!-- 把程序目录打包成 payload.zip 嵌入（不含调试符号和 data 数据目录） -->
+  <Target Name="EmbedPayload" BeforeTargets="BeforeBuild" DependsOnTargets="CheckSetupProduct">
+    <PropertyGroup>
+      <_PayloadStage>$(IntermediateOutputPath)payload\</_PayloadStage>
+      <_PayloadZip>$(IntermediateOutputPath)payload.zip</_PayloadZip>
+      <_HasPayload>false</_HasPayload>
+      <_HasPayload Condition="Exists('$(PayloadDir)$(PayloadExe)')">true</_HasPayload>
+    </PropertyGroup>
+    <Warning Condition="!$(_HasPayload)" Text="没有找到 $(PayloadDir)$(PayloadExe)，生成的安装程序不含程序文件。请先 dotnet publish 对应程序到该目录，或用 -p:PayloadDir=... 指定。" />
+    <ItemGroup Condition="$(_HasPayload)">
+      <_PayloadFile Include="$(PayloadDir)**\*" Exclude="$(PayloadDir)**\*.pdb;$(PayloadDir)**\*.xml;$(PayloadDir)data\**" />
+    </ItemGroup>
+    <RemoveDir Directories="$(_PayloadStage)" />
+    <Delete Files="$(_PayloadZip)" />
+    <Copy Condition="$(_HasPayload)" SourceFiles="@(_PayloadFile)" DestinationFiles="@(_PayloadFile->'$(_PayloadStage)%(RecursiveDir)%(Filename)%(Extension)')" />
+    <ZipDirectory Condition="$(_HasPayload)" SourceDirectory="$(_PayloadStage)" DestinationFile="$(_PayloadZip)" Overwrite="true" />
+    <ItemGroup Condition="$(_HasPayload)">
+      <EmbeddedResource Include="$(_PayloadZip)" LogicalName="payload.zip" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CopySetupToOutput" AfterTargets="Build" Condition="Exists('$(IntermediateOutputPath)payload.zip')">
+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(SetupOutputDir)$(SetupFileName)" />
+    <Message Importance="high" Text="安装程序 -> $([System.IO.Path]::GetFullPath('$(SetupOutputDir)$(SetupFileName)'))" />
+  </Target>
+</Project>
