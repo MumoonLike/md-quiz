@@ -105,6 +105,83 @@ namespace MdQuiz.Tests
         }
 
         [Fact]
+        public void PaperGroupsOrganizePapers()
+        {
+            using var env = new TestEnv();
+            var math = env.Papers.AddGroup("高一数学");
+            var mid = env.Papers.AddGroup("期中");
+            Assert.Throws<InvalidOperationException>(() => env.Papers.AddGroup(" 期中 "));
+            Assert.Throws<ArgumentException>(() => env.Papers.AddGroup("  "));
+
+            var a = new Paper { Name = "A", GroupId = math };
+            var b = new Paper { Name = "B" };
+            var c = new Paper { Name = "C", GroupId = math };
+            env.Papers.Save(a);
+            env.Papers.Save(b);
+            env.Papers.Save(c);
+            Assert.Throws<InvalidOperationException>(() => env.Papers.Save(new Paper { Name = "X", GroupId = 999 }));
+            Assert.Equal(math, env.Papers.Get(a.Id).GroupId);
+            Assert.Null(env.Papers.Get(b.Id).GroupId);
+
+            Assert.Equal(2, env.Papers.MoveToGroup(new[] { b.Id, c.Id }, mid));
+            var groups = env.Papers.ListGroups();
+            Assert.Equal(new[] { "高一数学", "期中" }, groups.Select(g => g.Name));
+            Assert.Equal(new[] { 1, 2 }, groups.Select(g => g.PaperCount));
+
+            env.Papers.RenameGroup(mid, "期中考试");
+            Assert.Throws<InvalidOperationException>(() => env.Papers.RenameGroup(mid, "高一数学"));
+            Assert.Equal("期中考试", env.Papers.ListGroups().Single(g => g.Id == mid).Name);
+
+            // 删除分组不删除试卷，组内试卷变为未分组
+            env.Papers.DeleteGroup(mid);
+            Assert.Single(env.Papers.ListGroups());
+            Assert.Equal(3, env.Papers.List().Count);
+            Assert.Null(env.Papers.Get(c.Id).GroupId);
+            Assert.Equal(1, env.Papers.MoveToGroup(new[] { a.Id }, null));
+            Assert.Null(env.Papers.Get(a.Id).GroupId);
+        }
+
+        [Fact]
+        public void UpgradesVersion1Database()
+        {
+            var dir = Path.Combine(Path.GetTempPath(), "mdquiz-v1-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            var path = Path.Combine(dir, "old.db");
+            try
+            {
+                // 模拟旧版本创建的数据库：只有 v1 表结构，已有一份试卷
+                using (var conn = new System.Data.SQLite.SQLiteConnection("Data Source=" + path))
+                {
+                    conn.Open();
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = typeof(Database).Assembly.GetType("MdQuiz.Server.Data.Schema")
+                            .GetField("V1").GetRawConstantValue() + @"
+                            INSERT INTO papers(name, description, items_json, created_at, updated_at) VALUES('旧试卷', '', '[]', 0, 0);
+                            PRAGMA user_version = 1;";
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                var db = new Database(path);
+                db.Initialize();
+                var papers = new PaperRepository(db);
+                var old = papers.List().Single();
+                Assert.Equal("旧试卷", old.Name);
+                Assert.Null(old.GroupId);
+                var g = papers.AddGroup("分组");
+                papers.MoveToGroup(new[] { old.Id }, g);
+                Assert.Equal(g, papers.Get(old.Id).GroupId);
+                db.Initialize(); // 再次初始化不重复升级
+                Assert.Single(papers.ListGroups());
+            }
+            finally
+            {
+                System.Data.SQLite.SQLiteConnection.ClearAllPools();
+                try { Directory.Delete(dir, true); } catch (Exception) { }
+            }
+        }
+
+        [Fact]
         public void RosterImportUpsertsAndReportsErrors()
         {
             using var env = new TestEnv();

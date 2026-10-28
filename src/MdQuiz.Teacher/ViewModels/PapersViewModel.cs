@@ -33,6 +33,50 @@ namespace MdQuiz.Teacher.ViewModels
         partial void OnScoreChanged(double value) => _changed?.Invoke();
     }
 
+    /// <summary>试卷树中的分组节点（Id 为 null 表示“未分组”）。</summary>
+    public partial class PaperGroupNode : ObservableObject
+    {
+        private readonly Action<PaperGroupNode> _expandedChanged;
+
+        public PaperGroupNode(long? id, string name, bool expanded, Action<PaperGroupNode> expandedChanged)
+        {
+            Id = id;
+            Name = name;
+            _isExpanded = expanded;
+            _expandedChanged = expandedChanged;
+        }
+
+        public long? Id { get; }
+        public string Name { get; }
+        public bool IsUngrouped => Id == null;
+        public ObservableCollection<PaperNode> Papers { get; } = new ObservableCollection<PaperNode>();
+
+        [ObservableProperty] private bool _isExpanded;
+        [ObservableProperty] private bool _isSelected;
+
+        partial void OnIsExpandedChanged(bool value) => _expandedChanged?.Invoke(this);
+    }
+
+    /// <summary>试卷树中的试卷节点。</summary>
+    public partial class PaperNode : ObservableObject
+    {
+        public PaperNode(Paper paper)
+        {
+            Paper = paper;
+        }
+
+        public Paper Paper { get; }
+
+        [ObservableProperty] private bool _isSelected;
+        [ObservableProperty] private bool _isExpanded;
+    }
+
+    public class GroupOption
+    {
+        public long? Id { get; set; }
+        public string Name { get; set; }
+    }
+
     public class TypeStat
     {
         public QuestionType Type { get; set; }
@@ -43,9 +87,13 @@ namespace MdQuiz.Teacher.ViewModels
 
     public partial class PapersViewModel : PageViewModel
     {
+        /// <summary>折叠的分组（-1 表示“未分组”），切换页面后保持。</summary>
+        private readonly HashSet<long> _collapsed = new HashSet<long>();
         private bool _loading;
 
         public ObservableCollection<Paper> Papers { get; } = new ObservableCollection<Paper>();
+        public ObservableCollection<PaperGroupNode> Groups { get; } = new ObservableCollection<PaperGroupNode>();
+        public ObservableCollection<GroupOption> GroupOptions { get; } = new ObservableCollection<GroupOption>();
         public ObservableCollection<PaperItemViewModel> Items { get; } = new ObservableCollection<PaperItemViewModel>();
         public ObservableCollection<TypeStat> Stats { get; } = new ObservableCollection<TypeStat>();
 
@@ -57,6 +105,8 @@ namespace MdQuiz.Teacher.ViewModels
         [ObservableProperty] private bool _hasPaper;
         [ObservableProperty] private string _totalText = "";
         [ObservableProperty] private int _missingCount;
+        [ObservableProperty] private GroupOption _selectedGroupOption;
+        [ObservableProperty] private string _summary = "";
 
         partial void OnNameChanged(string value) => MarkDirty();
         partial void OnDescriptionChanged(string value) => MarkDirty();
@@ -89,12 +139,41 @@ namespace MdQuiz.Teacher.ViewModels
             {
                 Papers.Clear();
                 foreach (var p in S.Papers.List()) Papers.Add(p);
+                var groups = S.Papers.ListGroups();
+                var known = new HashSet<long>(groups.Select(g => g.Id));
+                Groups.Clear();
+                GroupOptions.Clear();
+                GroupOptions.Add(new GroupOption { Id = null, Name = "未分组" });
+                foreach (var g in groups)
+                {
+                    var node = new PaperGroupNode(g.Id, g.Name, !_collapsed.Contains(g.Id), OnGroupExpandedChanged);
+                    foreach (var p in Papers.Where(p => p.GroupId == g.Id)) node.Papers.Add(new PaperNode(p));
+                    Groups.Add(node);
+                    GroupOptions.Add(new GroupOption { Id = g.Id, Name = g.Name });
+                }
+                var ungrouped = Papers.Where(p => p.GroupId == null || !known.Contains(p.GroupId.Value)).ToList();
+                if (ungrouped.Count > 0)
+                {
+                    var node = new PaperGroupNode(null, "未分组", !_collapsed.Contains(-1), OnGroupExpandedChanged);
+                    foreach (var p in ungrouped) node.Papers.Add(new PaperNode(p));
+                    Groups.Add(node);
+                }
+                Summary = groups.Count == 0 ? $"{Papers.Count} 份试卷" : $"{groups.Count} 个分组 · {Papers.Count} 份试卷";
             }
             finally
             {
                 _loading = false;
             }
         }
+
+        private void OnGroupExpandedChanged(PaperGroupNode node)
+        {
+            var key = node.Id ?? -1;
+            if (node.IsExpanded) _collapsed.Remove(key);
+            else _collapsed.Add(key);
+        }
+
+        private IEnumerable<PaperNode> AllNodes() => Groups.SelectMany(g => g.Papers);
 
         /// <summary>只更新选中项，不重新加载编辑区。</summary>
         private void SetSelectedSilently(Paper paper)
@@ -103,12 +182,118 @@ namespace MdQuiz.Teacher.ViewModels
             try
             {
                 SelectedPaper = paper;
+                SyncTreeSelection();
             }
             finally
             {
                 _loading = false;
             }
         }
+
+        /// <summary>树中高亮当前试卷，并展开它所在的分组。</summary>
+        private void SyncTreeSelection()
+        {
+            foreach (var g in Groups)
+            {
+                foreach (var n in g.Papers)
+                {
+                    var selected = SelectedPaper != null && n.Paper.Id == SelectedPaper.Id;
+                    n.IsSelected = selected;
+                    if (selected && !g.IsExpanded) g.IsExpanded = true;
+                }
+            }
+            SelectedGroupOption = GroupOptions.FirstOrDefault(o => o.Id == SelectedPaper?.GroupId) ?? GroupOptions.FirstOrDefault();
+        }
+
+        /// <summary>在树中点击了试卷（由页面代码调用）。</summary>
+        public void SelectFromTree(PaperNode node)
+        {
+            if (_loading || node == null || node.Paper == SelectedPaper) return;
+            SelectedPaper = node.Paper;
+            _loading = true;
+            try
+            {
+                SyncTreeSelection();
+            }
+            finally
+            {
+                _loading = false;
+            }
+        }
+
+        partial void OnSelectedGroupOptionChanged(GroupOption value)
+        {
+            if (_loading || value == null || SelectedPaper == null || SelectedPaper.GroupId == value.Id) return;
+            try
+            {
+                S.Papers.MoveToGroup(new[] { SelectedPaper.Id }, value.Id);
+                SelectedPaper.GroupId = value.Id;
+                var id = SelectedPaper.Id;
+                if (value.Id.HasValue) _collapsed.Remove(value.Id.Value);
+                ReloadList();
+                SetSelectedSilently(Papers.FirstOrDefault(p => p.Id == id));
+                Ui.Toast($"已移动到“{value.Name}”");
+            }
+            catch (Exception ex)
+            {
+                Ui.Error(ex.Message);
+            }
+        }
+
+        // ---------------- 分组管理 ----------------
+
+        [RelayCommand]
+        private void NewGroup()
+        {
+            var name = TextInputWindow.Ask("新建分组", "分组名称（如“高一数学”“期中考试”）", "");
+            if (string.IsNullOrWhiteSpace(name)) return;
+            try
+            {
+                S.Papers.AddGroup(name);
+                ReloadList();
+                SetSelectedSilently(Papers.FirstOrDefault(p => p.Id == SelectedPaper?.Id));
+            }
+            catch (Exception ex)
+            {
+                Ui.Error(ex.Message);
+            }
+        }
+
+        [RelayCommand]
+        private void RenameGroup(PaperGroupNode group)
+        {
+            if (group?.Id == null) return;
+            var name = TextInputWindow.Ask("重命名分组", "分组名称", group.Name);
+            if (string.IsNullOrWhiteSpace(name)) return;
+            try
+            {
+                S.Papers.RenameGroup(group.Id.Value, name);
+                ReloadList();
+                SetSelectedSilently(Papers.FirstOrDefault(p => p.Id == SelectedPaper?.Id));
+            }
+            catch (Exception ex)
+            {
+                Ui.Error(ex.Message);
+            }
+        }
+
+        [RelayCommand]
+        private void DeleteGroup(PaperGroupNode group)
+        {
+            if (group?.Id == null) return;
+            var message = group.Papers.Count > 0
+                ? $"确定删除分组“{group.Name}”吗？\n\n组内 {group.Papers.Count} 份试卷不会被删除，会移到“未分组”。"
+                : $"确定删除分组“{group.Name}”吗？";
+            if (!Ui.ConfirmDanger(message, "删除分组")) return;
+            S.Papers.DeleteGroup(group.Id.Value);
+            _collapsed.Remove(group.Id.Value);
+            var keep = SelectedPaper?.Id;
+            ReloadList();
+            SetSelectedSilently(Papers.FirstOrDefault(p => p.Id == keep));
+        }
+
+        [RelayCommand]
+        private void NewInGroup(PaperGroupNode group) => CreatePaper(group?.Id);
 
         private void ShowPaper(long id)
         {
@@ -175,13 +360,17 @@ namespace MdQuiz.Teacher.ViewModels
 
         private HashSet<long> CurrentIds() => new HashSet<long>(Items.Select(i => i.QuestionId));
 
+        /// <summary>新建试卷，放在当前试卷所在的分组。</summary>
         [RelayCommand]
-        private void New()
+        private void New() => CreatePaper(SelectedPaper?.GroupId);
+
+        private void CreatePaper(long? groupId)
         {
             if (IsDirty && SelectedPaper != null && Ui.Confirm($"试卷“{Name}”有未保存的修改，要保存吗？", "保存修改")) Persist(SelectedPaper);
             var name = TextInputWindow.Ask("新建试卷", "试卷名称", $"新试卷 {DateTime.Now:MMdd}");
             if (string.IsNullOrWhiteSpace(name)) return;
-            var paper = new Paper { Name = name.Trim() };
+            if (groupId.HasValue) _collapsed.Remove(groupId.Value);
+            var paper = new Paper { Name = name.Trim(), GroupId = groupId };
             S.Papers.Save(paper);
             IsDirty = false;
             ShowPaper(paper.Id);
@@ -197,6 +386,7 @@ namespace MdQuiz.Teacher.ViewModels
             {
                 Name = source.Name + "（副本）",
                 Description = source.Description,
+                GroupId = source.GroupId,
                 Items = source.Items.Select(i => new PaperItem { QuestionId = i.QuestionId, Score = i.Score }).ToList(),
             };
             S.Papers.Save(copy);

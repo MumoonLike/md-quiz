@@ -101,6 +101,7 @@ namespace MdQuiz.Teacher.Services
             var paper = new Paper
             {
                 Name = "冒烟测试试卷",
+                GroupId = s.Papers.AddGroup("冒烟测试分组"),
                 Items = valid.Select(q => new PaperItem { QuestionId = q.Question.Id, Score = q.Score ?? 2 }).ToList(),
             };
             s.Papers.Save(paper);

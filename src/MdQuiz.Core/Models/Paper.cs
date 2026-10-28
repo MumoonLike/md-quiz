@@ -10,11 +10,22 @@ namespace MdQuiz.Core.Models
         public long Id { get; set; }
         public string Name { get; set; } = "";
         public string Description { get; set; } = "";
+        /// <summary>所属分组；null 表示未分组。</summary>
+        public long? GroupId { get; set; }
         public List<PaperItem> Items { get; set; } = new List<PaperItem>();
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
         public double TotalScore => Items.Sum(i => i.Score);
+    }
+
+    /// <summary>试卷分组（如“高一数学”“期中”），仅用于整理试卷列表。</summary>
+    public class PaperGroup
+    {
+        public long Id { get; set; }
+        public string Name { get; set; } = "";
+        public int SortOrder { get; set; }
+        public int PaperCount { get; set; }
     }
 
     public class PaperItem
