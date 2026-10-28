@@ -94,7 +94,7 @@ Check $alive '程序启动后保持运行'
 $fromLib = @($modules | Where-Object { $_ -like (Join-Path $installDir 'lib\*') })
 $fromLib | ForEach-Object { Write-Host "    已加载 $_" }
 if ($Product -eq 'Teacher') { Check (@($fromLib | Where-Object { $_ -like '*\lib\x*\SQLite.Interop.dll' }).Count -eq 1) '从 lib 加载 SQLite 原生库' }
-$appLog = Get-ChildItem (Join-Path $dataDir 'logs') -Filter *.log -ErrorAction SilentlyContinue | Get-Content -Raw
+$appLog = (Get-ChildItem (Join-Path $dataDir 'logs') -Filter *.log -ErrorAction SilentlyContinue | Get-Content -Raw) -join "`n"
 Write-Host ($appLog | Out-String)
 # 日志由 lib 中的 MdQuiz.Wpf.dll 写入；教师端写这一行之前已打开 SQLite 数据库
 Check ($appLog -match ($edition + '启动')) "程序日志写入 data\logs（$edition 启动）"
