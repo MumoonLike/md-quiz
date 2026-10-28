@@ -36,9 +36,7 @@ namespace MdQuiz.Core.Scoring
                     double total = 0;
                     for (var i = 0; i < q.Blanks.Count; i++)
                     {
-                        var given = i < values.Count ? NormalizeText(values[i]) : "";
-                        if (given.Length == 0) continue;
-                        if (Question.BlankAlternatives(q.Blanks[i]).Any(alt => NormalizeText(alt) == given)) total += each;
+                        if (BlankMatches(q.Blanks[i], i < values.Count ? values[i] : "")) total += each;
                     }
                     return Round(total);
                 }
@@ -49,6 +47,13 @@ namespace MdQuiz.Core.Scoring
                 default:
                     return 0;
             }
+        }
+
+        /// <summary>填空题的一个空是否答对（忽略首尾空格、全角 / 半角和大小写）。</summary>
+        public static bool BlankMatches(string blank, string given)
+        {
+            var text = NormalizeText(given);
+            return text.Length > 0 && Question.BlankAlternatives(blank).Any(alt => NormalizeText(alt) == text);
         }
 
         public static double GradeMultiple(ISet<string> correct, ISet<string> chosen, double score, MultipleScoringMode mode)

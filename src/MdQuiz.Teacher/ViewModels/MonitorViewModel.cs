@@ -355,6 +355,15 @@ namespace MdQuiz.Teacher.ViewModels
             S.Host.ReleaseStudent(p.StudentNo);
         }
 
+        /// <summary>查看考生答卷（双击学生卡片）。</summary>
+        [RelayCommand]
+        private void ViewAnswers(ParticipantItem p)
+        {
+            var exam = S.Host.CurrentExam;
+            if (exam == null || p == null) return;
+            StudentAnswersWindow.Open(exam.Id, p.StudentNo, ParticipantsView.Cast<ParticipantItem>().Concat(Participants).Select(x => x.StudentNo));
+        }
+
         [RelayCommand]
         private void SetFilter(string filter) => Filter = filter ?? "all";
 

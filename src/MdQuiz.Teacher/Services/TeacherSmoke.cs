@@ -68,6 +68,22 @@ namespace MdQuiz.Teacher.Services
             SmokeKit.Capture(main, name);
         }
 
+        /// <summary>打开考生答卷窗口并截图。</summary>
+        private static async Task CaptureAnswers(long examId, string studentNo, string name)
+        {
+            SmokeKit.Step("open " + name);
+            StudentAnswersWindow.Open(examId, studentNo, null);
+            await SmokeKit.Settle(1200);
+            var window = Application.Current.Windows.OfType<StudentAnswersWindow>().FirstOrDefault();
+            if (window == null)
+            {
+                SmokeKit.Error("answers window not opened");
+                return;
+            }
+            SmokeKit.Capture(window, name);
+            window.Close();
+        }
+
         private static async Task RunCore(AppServices s)
         {
             // 登录窗口：首次使用和正常两种状态
@@ -148,6 +164,7 @@ namespace MdQuiz.Teacher.Services
             await SmokeKit.WaitUntil(() => s.Host.GetParticipants().Any(p => p.Answered >= 3), 180000, "student answers");
             await SmokeKit.Settle(800);
             SmokeKit.Capture(main, "teacher-monitor-running");
+            await CaptureAnswers(examId, s.Host.GetParticipants().First(p => p.Answered > 0).StudentNo, "teacher-answers-live");
             await SmokeKit.WaitUntil(() => s.Host.GetParticipants().Any(p => p.Status == ParticipantStatus.Submitted), 240000, "student submit");
             await SmokeKit.Settle(800);
             SmokeKit.Capture(main, "teacher-monitor-submitted");
@@ -162,6 +179,7 @@ namespace MdQuiz.Teacher.Services
             SmokeKit.Capture(main, "teacher-results");
             var exam = s.Exams.Get(examId);
             await Show(main, new GradingWindow(exam), "teacher-grading");
+            await CaptureAnswers(examId, s.Exams.ListParticipants(examId).First(p => p.Status == ParticipantStatus.Submitted).StudentNo, "teacher-answers-final");
             ExcelService.ExportResults(Path.Combine(SmokeKit.OutDir, "results.xlsx"), s.Results.BuildTable(exam));
 
             // 最小窗口尺寸下的布局

@@ -508,6 +508,54 @@ namespace MdQuiz.Tests
         }
 
         [Fact]
+        public async Task AnswerSheetShowsLiveAndFinalVerdicts()
+        {
+            var (env, examId, _, exam) = Setup(new ExamSettings { DurationMinutes = 30, MultipleMode = MultipleScoringMode.HalfForPartial });
+            using (env)
+            using (var host = new ExamHost(env.Db))
+            {
+                host.Start(0, TestEnv.FreeUdpPort());
+                host.OpenExam(examId);
+                host.StartExam();
+                using var c = new ExamClient(Path.Combine(env.Dir, "c"), "PC");
+                await c.ConnectAsync("127.0.0.1", host.Port);
+                Assert.True((await c.LoginAsync("001")).Ok);
+                await TaskExt.Until(() => c.Paper != null);
+
+                var single = exam.Questions.First(q => q.Type == QuestionType.Single);
+                var multiple = exam.Questions.First(q => q.Type == QuestionType.Multiple);
+                var fill = exam.Questions.First(q => q.Type == QuestionType.FillBlank);
+                var essay = exam.Questions.First(q => q.Type == QuestionType.ShortAnswer);
+                var wrongKey = Question.OptionKey(Enumerable.Range(0, single.Options.Count).First(i => !single.CorrectKeys().Contains(Question.OptionKey(i))));
+                c.SetAnswer(single.Id, new List<string> { wrongKey });
+                c.SetAnswer(multiple.Id, new List<string> { multiple.CorrectKeys().OrderBy(k => k).First() });
+                c.SetAnswer(fill.Id, CorrectValues(fill));
+                c.SetAnswer(essay.Id, new List<string> { "我的答案" });
+                await TaskExt.Until(() => c.PendingSyncCount == 0);
+
+                var sheet = new ResultService(env.Exams).BuildAnswerSheet(exam, "001");
+                Assert.Equal(exam.Questions.Count, sheet.Count);
+                Assert.Equal(Enumerable.Range(1, sheet.Count), sheet.Select(i => i.Number));
+                var bySingle = sheet.Single(i => i.Question.Id == single.Id);
+                Assert.Equal(AnswerVerdict.Wrong, bySingle.Verdict);
+                Assert.True(bySingle.Provisional);
+                Assert.Equal(AnswerVerdict.Partial, sheet.Single(i => i.Question.Id == multiple.Id).Verdict);
+                Assert.Equal(AnswerVerdict.Correct, sheet.Single(i => i.Question.Id == fill.Id).Verdict);
+                Assert.Equal(AnswerVerdict.Pending, sheet.Single(i => i.Question.Id == essay.Id).Verdict);
+                Assert.Null(sheet.Single(i => i.Question.Id == essay.Id).Score);
+                Assert.Equal(sheet.Count - 4, sheet.Count(i => i.Verdict == AnswerVerdict.Unanswered));
+
+                await c.SubmitAsync();
+                new ResultService(env.Exams).SetManualScore(exam, "001", essay.Id, 3);
+                var final = new ResultService(env.Exams).BuildAnswerSheet(exam, "001");
+                Assert.All(final.Where(i => QuestionTypes.IsAutoGraded(i.Question.Type)), i => Assert.False(i.Provisional));
+                var graded = final.Single(i => i.Question.Id == essay.Id);
+                Assert.True(graded.Manual);
+                Assert.Equal(3, graded.Score);
+            }
+        }
+
+        [Fact]
         public async Task TeacherCanExtendAndShortenTime()
         {
             var (env, examId, _, _) = Setup(new ExamSettings { DurationMinutes = 30 });
