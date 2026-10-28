@@ -63,7 +63,8 @@
                         <!-- 分组标题：点击展开 / 折叠 -->
                         <HierarchicalDataTemplate DataType="{x:Type vm:PaperGroupNode}" ItemsSource="{Binding Papers}"
                                                   ItemContainerStyle="{StaticResource PaperTreeItem}">
-                            <ToggleButton IsChecked="{Binding IsExpanded}" Cursor="Hand" FocusVisualStyle="{x:Null}" Margin="0,4,0,6"
+                            <ToggleButton Style="{x:Null}" IsChecked="{Binding IsExpanded}" Cursor="Hand" FocusVisualStyle="{x:Null}" Margin="0,4,0,6"
+                                          HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                                           Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
                                 <ToggleButton.ContextMenu>
                                     <ContextMenu>

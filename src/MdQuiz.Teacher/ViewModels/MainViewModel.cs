@@ -179,11 +179,11 @@ namespace MdQuiz.Teacher.ViewModels
             McpRunning = mcp.IsRunning;
             if (!mcp.IsRunning)
             {
-                McpStatus = AppServices.Current.McpEnabled ? "MCP 服务未启动" : "";
+                McpStatus = AppServices.Current.McpEnabled ? "MCP 未启动" : "";
                 return;
             }
             var options = mcp.Options;
-            McpStatus = options.AllowLan ? $"MCP 服务运行中 · 局域网 :{mcp.Port}" : $"MCP 服务运行中 · 127.0.0.1:{mcp.Port}";
+            McpStatus = $"MCP 运行中 · {(options.AllowLan ? "局域网" : "本机")} {mcp.Port}";
         }
 
         private void OnMcpActivity(McpActivity a)

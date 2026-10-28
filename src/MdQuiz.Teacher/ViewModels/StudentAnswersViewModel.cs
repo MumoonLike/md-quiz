@@ -344,8 +344,8 @@ namespace MdQuiz.Teacher.ViewModels
                 ScoreLabel = "客观题预判得分";
             }
             Hint = submitted
-                ? (IsLive ? "已交卷 · 考试进行中，列表每 3 秒自动刷新" : "")
-                : IsLive ? "考试进行中，答案每 3 秒自动刷新；客观题得分按当前答案预判，交卷后以正式判分为准" : "";
+                ? (IsLive ? "已交卷 · 列表每 3 秒自动刷新" : "")
+                : IsLive ? "每 3 秒自动刷新 · 客观题为预判得分，交卷后以正式判分为准" : "";
             var visible = StudentsView.Cast<AnswerStudentRow>().ToList();
             var index = visible.IndexOf(row);
             Position = index >= 0 ? $"{index + 1} / {visible.Count}" : "";
