@@ -23,6 +23,16 @@ namespace MdQuiz.Server.Data
         public int ParticipantCount { get; set; }
         public int SubmittedCount { get; set; }
         public int PendingManualCount { get; set; }
+        /// <summary>设置的考试时长（分钟）。</summary>
+        public int DurationMinutes { get; set; }
+        /// <summary>考试中加减的分钟数（可为负）。</summary>
+        public int ExtraMinutes { get; set; }
+        public int TotalMinutes => DurationMinutes + ExtraMinutes;
+
+        /// <summary>结束时间（UTC）：已结束为实际结束时间，考试中为按当前时长计算的预计结束时间，未开始为 null。</summary>
+        public DateTime? EndAt => EndedAt ?? (Status == ExamStatus.Running ? StartedAt?.AddMinutes(TotalMinutes) : null);
+
+        public string EndLabel => Status == ExamStatus.Ended ? "结束" : "预计结束";
     }
 
     public sealed class ExamRepository
@@ -84,11 +94,14 @@ namespace MdQuiz.Server.Data
             public long ParticipantCount { get; set; }
             public long SubmittedCount { get; set; }
             public long PendingManualCount { get; set; }
+            public string SettingsJson { get; set; }
+            public long ExtraMinutes { get; set; }
         }
 
         public List<ExamSummary> List()
         {
             const string sql = @"SELECT e.id, e.title, e.paper_name, e.status, e.question_count, e.total_score, e.created_at, e.started_at, e.ended_at,
+                       e.settings_json, e.extra_minutes,
                        (SELECT COUNT(*) FROM participants p WHERE p.exam_id = e.id) AS participant_count,
                        (SELECT COUNT(*) FROM participants p WHERE p.exam_id = e.id AND p.status = 3) AS submitted_count,
                        (SELECT COUNT(*) FROM participants p WHERE p.exam_id = e.id AND p.pending_manual > 0) AS pending_manual_count
@@ -107,6 +120,8 @@ namespace MdQuiz.Server.Data
                 ParticipantCount = (int)r.ParticipantCount,
                 SubmittedCount = (int)r.SubmittedCount,
                 PendingManualCount = (int)r.PendingManualCount,
+                DurationMinutes = (Json.Deserialize<ExamSettings>(r.SettingsJson) ?? new ExamSettings()).DurationMinutes,
+                ExtraMinutes = (int)r.ExtraMinutes,
             }).ToList());
         }
 

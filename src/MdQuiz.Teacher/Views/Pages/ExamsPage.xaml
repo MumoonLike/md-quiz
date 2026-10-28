@@ -32,6 +32,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal">
@@ -46,17 +47,45 @@
                                     <Run Text="  ·  创建于 " /><Run Text="{Binding CreatedAt, Mode=OneWay, Converter={StaticResource LocalTime}, ConverterParameter='yyyy-MM-dd HH:mm'}" />
                                 </TextBlock>
                             </StackPanel>
-                            <TextBlock Grid.Column="1" Margin="24,0" VerticalAlignment="Center" MinWidth="110" TextAlignment="Right"
+                            <!-- 考试时间 -->
+                            <Border Grid.Column="1" Margin="24,0,0,0" VerticalAlignment="Center" Width="196" Padding="12,7" CornerRadius="8"
+                                    Background="{DynamicResource SecondaryRegionBrush}">
+                                <Grid>
+                                    <StackPanel Visibility="{Binding StartedAt, Converter={StaticResource HasValueToVis}, ConverterParameter=invert}">
+                                        <TextBlock FontSize="13">
+                                            <Run Text="时长 " Foreground="{DynamicResource SecondaryTextBrush}" /><Run Text="{Binding TotalMinutes, Mode=OneWay}" FontWeight="SemiBold" /><Run Text=" 分钟" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                        </TextBlock>
+                                        <TextBlock Text="尚未开考" Style="{StaticResource Muted}" Margin="0,3,0,0" />
+                                    </StackPanel>
+                                    <Grid Visibility="{Binding StartedAt, Converter={StaticResource HasValueToVis}}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="开始" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                        <TextBlock Grid.Column="1" FontSize="13" FontFamily="{StaticResource MonoFont}"
+                                                   Text="{Binding StartedAt, Converter={StaticResource LocalTime}, ConverterParameter='yyyy-MM-dd HH:mm'}" />
+                                        <TextBlock Grid.Row="1" Text="{Binding EndLabel}" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,3,10,0" />
+                                        <TextBlock Grid.Row="1" Grid.Column="1" FontSize="13" FontFamily="{StaticResource MonoFont}" FontWeight="SemiBold" Margin="0,3,0,0"
+                                                   Text="{Binding EndAt, Converter={StaticResource LocalTime}, ConverterParameter='yyyy-MM-dd HH:mm'}" />
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                            <TextBlock Grid.Column="2" Margin="24,0" VerticalAlignment="Center" MinWidth="110" TextAlignment="Right"
                                        Text="尚未开放登录" Style="{StaticResource Muted}"
                                        Visibility="{Binding ParticipantCount, Converter={StaticResource HasValueToVis}, ConverterParameter=invert}" />
-                            <StackPanel Grid.Column="1" Margin="24,0" VerticalAlignment="Center" MinWidth="110"
+                            <StackPanel Grid.Column="2" Margin="24,0" VerticalAlignment="Center" MinWidth="110"
                                         Visibility="{Binding ParticipantCount, Converter={StaticResource HasValueToVis}}">
                                 <TextBlock HorizontalAlignment="Right" FontSize="18" FontWeight="SemiBold">
                                     <Run Text="{Binding SubmittedCount, Mode=OneWay}" /><Run Text=" / " Foreground="{DynamicResource ThirdlyTextBrush}" /><Run Text="{Binding ParticipantCount, Mode=OneWay}" Foreground="{DynamicResource ThirdlyTextBrush}" />
                                 </TextBlock>
                                 <TextBlock Text="已交卷 / 应考" Style="{StaticResource Muted}" HorizontalAlignment="Right" />
                             </StackPanel>
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
                                 <Button Content="开放 / 监考" Margin="0,0,8,0"
                                         hc:IconElement.Geometry="{StaticResource Icon.MonitorEye}"
                                         Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">

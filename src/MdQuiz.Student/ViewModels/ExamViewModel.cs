@@ -353,6 +353,9 @@ namespace MdQuiz.Student.ViewModels
             if (left < TimeSpan.Zero) left = TimeSpan.Zero;
             ClockText = left.TotalHours >= 1 ? left.ToString(@"h\:mm\:ss") : left.ToString(@"mm\:ss");
             ClockWarning = left.TotalMinutes < 5;
+            // 老师延长时间后剩余时间又变多：重新允许提醒
+            if (left.TotalMinutes > 5.5) _warned5 = false;
+            if (left.TotalMinutes > 1.5) _warned1 = false;
             if (!_warned5 && left.TotalMinutes < 5 && left.TotalMinutes > 4)
             {
                 _warned5 = true;

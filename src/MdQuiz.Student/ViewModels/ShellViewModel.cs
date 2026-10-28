@@ -186,10 +186,27 @@ namespace MdQuiz.Student.ViewModels
             }
         }
 
+        private long _lastExamId;
+        private int _lastDuration;
+
         private void OnExamChanged(ExamInfo info)
         {
             LoginVm.RefreshExam();
             WaitingVm.Refresh();
+            NotifyTimeChange(info);
+        }
+
+        /// <summary>考试中老师加减了时间：提示学生（倒计时已自动同步）。</summary>
+        private void NotifyTimeChange(ExamInfo info)
+        {
+            if (info == null) return;
+            var changed = info.ExamId == _lastExamId && _lastDuration > 0 && info.DurationMinutes != _lastDuration;
+            var delta = info.DurationMinutes - _lastDuration;
+            _lastExamId = info.ExamId;
+            _lastDuration = info.DurationMinutes;
+            if (!changed || info.Status != ExamStatus.Running || Screen != Screen.Exam) return;
+            if (delta > 0) Ui.ToastInfo($"老师已将考试时间延长 {delta} 分钟");
+            else Ui.ToastWarning($"老师已将考试时间缩短 {-delta} 分钟，请注意剩余时间");
         }
 
         private void OnPaper(StudentPaper paper)

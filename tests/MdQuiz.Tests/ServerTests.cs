@@ -429,5 +429,42 @@ namespace MdQuiz.Tests
                 Assert.Equal(ExamStatus.Ended, env.Exams.Get(examId).Status);
             }
         }
+
+        [Fact]
+        public async Task TeacherCanExtendAndShortenTime()
+        {
+            var (env, examId, _, _) = Setup(new ExamSettings { DurationMinutes = 30 });
+            using (env)
+            using (var host = new ExamHost(env.Db))
+            {
+                host.Start(0, TestEnv.FreeUdpPort());
+                host.OpenExam(examId);
+                Assert.Throws<InvalidOperationException>(() => host.AdjustTime(5)); // 未开考
+                host.StartExam();
+
+                using var c = new ExamClient(Path.Combine(env.Dir, "c"), "PC");
+                await c.ConnectAsync("127.0.0.1", host.Port);
+                Assert.True((await c.LoginAsync("001")).Ok);
+                await TaskExt.Until(() => c.DeadlineUtc != null);
+                var before = c.DeadlineUtc.Value;
+
+                var deadline = host.AdjustTime(10);
+                Assert.Equal(40, host.CurrentExam.TotalMinutes);
+                Assert.Equal(host.CurrentExam.StartedAt.Value.AddMinutes(40), deadline);
+                await TaskExt.Until(() => c.Exam?.DurationMinutes == 40 && c.DeadlineUtc > before.AddMinutes(9));
+
+                host.AdjustTime(-15);
+                Assert.Equal(25, host.CurrentExam.TotalMinutes);
+                Assert.Equal(-5, env.Exams.Get(examId).ExtraMinutes);
+                await TaskExt.Until(() => c.Exam?.DurationMinutes == 25 && c.DeadlineUtc < before);
+
+                // 缩短到不足 1 分钟会被拒绝，时间保持不变
+                Assert.Throws<InvalidOperationException>(() => host.AdjustTime(-25));
+                Assert.Equal(25, host.CurrentExam.TotalMinutes);
+                Assert.Equal(-5, env.Exams.List().Single(e => e.Id == examId).ExtraMinutes);
+                Assert.Equal(25, env.Exams.List().Single(e => e.Id == examId).TotalMinutes);
+                Assert.Throws<ArgumentOutOfRangeException>(() => host.AdjustTime(0));
+            }
+        }
     }
 }
