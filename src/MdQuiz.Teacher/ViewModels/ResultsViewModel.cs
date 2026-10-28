@@ -118,6 +118,17 @@ namespace MdQuiz.Teacher.ViewModels
         [RelayCommand]
         private void Refresh() => LoadRows();
 
+        [ObservableProperty] private ResultRowItem _selectedRow;
+
+        /// <summary>查看考生答卷（双击成绩表中的一行）。</summary>
+        [RelayCommand]
+        private void ViewAnswers(ResultRowItem row)
+        {
+            row = row ?? SelectedRow ?? Rows.FirstOrDefault();
+            if (SelectedExam == null || row == null) return;
+            StudentAnswersWindow.Open(SelectedExam.Id, row.StudentNo, Rows.Select(r => r.StudentNo));
+        }
+
         [RelayCommand]
         private void Grade()
         {
@@ -140,7 +151,7 @@ namespace MdQuiz.Teacher.ViewModels
             {
                 var exam = S.Exams.Get(SelectedExam.Id);
                 ExcelService.ExportResults(dlg.FileName, S.Results.BuildTable(exam));
-                Ui.Toast("成绩已导出");
+                Ui.ToastFile("成绩已导出", dlg.FileName);
             }
             catch (Exception ex)
             {

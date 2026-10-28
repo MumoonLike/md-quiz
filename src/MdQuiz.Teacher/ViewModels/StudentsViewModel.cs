@@ -177,8 +177,15 @@ namespace MdQuiz.Teacher.ViewModels
         {
             var dlg = new SaveFileDialog { Filter = "Excel 文件|*.xlsx", FileName = "花名册模板.xlsx" };
             if (dlg.ShowDialog() != true) return;
-            ExcelService.WriteRosterTemplate(dlg.FileName);
-            Ui.Toast("模板已保存");
+            try
+            {
+                ExcelService.WriteRosterTemplate(dlg.FileName);
+                Ui.ToastFile("花名册模板已保存", dlg.FileName);
+            }
+            catch (Exception ex)
+            {
+                Ui.Error("保存失败：" + ex.Message);
+            }
         }
     }
 }

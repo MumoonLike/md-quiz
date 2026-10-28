@@ -1,0 +1,54 @@
+<hc:Window x:Class="MdQuiz.Teacher.Views.Dialogs.TimeAdjustWindow"
+           xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+           xmlns:hc="https://handyorg.github.io/handycontrol"
+           Title="调整考试时间" Width="440" SizeToContent="Height" ResizeMode="NoResize" ShowInTaskbar="False"
+           Background="{DynamicResource RegionBrush}">
+    <StackPanel Margin="24,14,24,20">
+        <!-- 当前 -->
+        <Border Background="{DynamicResource SecondaryRegionBrush}" CornerRadius="8" Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="当前剩余" Style="{StaticResource Muted}" />
+                    <TextBlock x:Name="CurrentRemaining" FontSize="20" FontWeight="SemiBold" FontFamily="{StaticResource MonoFont}" Margin="0,2,0,0" />
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="当前结束时间" Style="{StaticResource Muted}" />
+                    <TextBlock x:Name="CurrentEnd" FontSize="20" FontWeight="SemiBold" FontFamily="{StaticResource MonoFont}" Margin="0,2,0,0" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 调整 -->
+        <TextBlock Text="调整方式" Style="{StaticResource FieldLabel}" Margin="0,18,0,6" />
+        <StackPanel Orientation="Horizontal">
+            <RadioButton x:Name="ExtendOption" Style="{StaticResource Segment}" Content="延长" IsChecked="True" Checked="OnChanged" />
+            <RadioButton x:Name="ShortenOption" Style="{StaticResource Segment}" Content="缩短" Checked="OnChanged" />
+        </StackPanel>
+        <TextBlock Text="分钟数" Style="{StaticResource FieldLabel}" Margin="0,16,0,6" />
+        <DockPanel>
+            <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Center" Margin="10,0,0,0">
+                <Button Content="5" Style="{StaticResource ButtonDefault}" Height="32" Padding="12,0" Margin="0,0,6,0" Click="OnPreset" Tag="5" />
+                <Button Content="10" Style="{StaticResource ButtonDefault}" Height="32" Padding="12,0" Margin="0,0,6,0" Click="OnPreset" Tag="10" />
+                <Button Content="15" Style="{StaticResource ButtonDefault}" Height="32" Padding="12,0" Margin="0,0,6,0" Click="OnPreset" Tag="15" />
+                <Button Content="30" Style="{StaticResource ButtonDefault}" Height="32" Padding="12,0" Click="OnPreset" Tag="30" />
+            </WrapPanel>
+            <hc:NumericUpDown x:Name="MinutesInput" Height="36" Minimum="1" Maximum="600" Increment="1" DecimalPlaces="0" Value="5"
+                              ValueChanged="OnMinutesChanged" />
+        </DockPanel>
+
+        <!-- 预览 -->
+        <Border x:Name="PreviewBox" CornerRadius="8" Padding="14,10" Margin="0,18,0,0" Background="{DynamicResource LightPrimaryBrush}">
+            <TextBlock x:Name="PreviewText" TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource DarkPrimaryBrush}" />
+        </Border>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,22,0,0">
+            <Button Content="取消" Style="{StaticResource ButtonDefault}" Width="88" Height="34" Margin="0,0,10,0" IsCancel="True" />
+            <Button x:Name="OkButton" Content="确定" Style="{StaticResource ButtonPrimary}" Width="88" Height="34" IsDefault="True" Click="OnOk" />
+        </StackPanel>
+    </StackPanel>
+</hc:Window>

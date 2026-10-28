@@ -230,17 +230,54 @@ namespace MdQuiz.Server.Hosting
             }
         }
 
+        /// <summary>调整后至少保留的剩余时间。</summary>
+        public static readonly TimeSpan MinRemainingAfterAdjust = TimeSpan.FromMinutes(1);
+
         public void ExtendExam(int minutes)
         {
             if (minutes <= 0) throw new ArgumentOutOfRangeException(nameof(minutes));
+            AdjustTime(minutes);
+        }
+
+        /// <summary>
+        /// 考试中加减时间：正数延长，负数缩短。缩短后剩余时间不能少于 <see cref="MinRemainingAfterAdjust"/>
+        /// （想立即收卷请直接结束考试）。返回调整后的截止时间（UTC）。
+        /// </summary>
+        public DateTime AdjustTime(int minutes)
+        {
+            if (minutes == 0) throw new ArgumentOutOfRangeException(nameof(minutes), "调整的分钟数不能为 0");
             lock (_lock)
             {
-                if (_exam == null || _exam.Status != ExamStatus.Running) throw new InvalidOperationException("只有考试中可以延长时间");
+                if (_exam == null || _exam.Status != ExamStatus.Running || _exam.StartedAt == null)
+                    throw new InvalidOperationException("只有考试中可以调整时间");
+                if (minutes < 0)
+                {
+                    var newDeadline = _exam.StartedAt.Value.AddMinutes(_exam.TotalMinutes + minutes);
+                    var remaining = newDeadline - DateTime.UtcNow;
+                    if (remaining < MinRemainingAfterAdjust)
+                        throw new InvalidOperationException($"缩短 {-minutes} 分钟后剩余时间不足 1 分钟。如需立即收卷，请直接“结束考试”。");
+                }
                 _exam.ExtraMinutes += minutes;
                 _exams.UpdateState(_exam);
                 BroadcastExamStateLocked();
-                Write(HostLogLevel.Info, $"考试时间延长 {minutes} 分钟");
+                var deadline = _exam.DeadlineUtc.Value;
+                Write(HostLogLevel.Info, $"考试时间{(minutes > 0 ? "延长" : "缩短")} {Math.Abs(minutes)} 分钟，{deadline.ToLocalTime():HH:mm} 结束");
                 ExamStateChanged?.Invoke();
+                return deadline;
+            }
+        }
+
+        /// <summary>剩余考试时间；不在考试中时为 null。</summary>
+        public TimeSpan? Remaining
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    if (_exam?.Status != ExamStatus.Running || _exam.DeadlineUtc == null) return null;
+                    var left = _exam.DeadlineUtc.Value - DateTime.UtcNow;
+                    return left < TimeSpan.Zero ? TimeSpan.Zero : left;
+                }
             }
         }
 

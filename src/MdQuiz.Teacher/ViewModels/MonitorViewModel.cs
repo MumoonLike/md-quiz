@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -11,6 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using MdQuiz.Core.Models;
 using MdQuiz.Server.Data;
 using MdQuiz.Server.Hosting;
+using MdQuiz.Teacher.Views.Dialogs;
 using MdQuiz.Wpf;
 using MdQuiz.Wpf.Converters;
 
@@ -252,12 +254,12 @@ namespace MdQuiz.Teacher.ViewModels
                     var left = (exam.DeadlineUtc ?? DateTime.UtcNow) - DateTime.UtcNow;
                     if (left < TimeSpan.Zero) left = TimeSpan.Zero;
                     Clock = left.TotalHours >= 1 ? left.ToString(@"h\:mm\:ss") : left.ToString(@"mm\:ss");
-                    ClockLabel = "剩余时间";
+                    ClockLabel = exam.DeadlineUtc.HasValue ? $"剩余时间 · {exam.DeadlineUtc.Value.ToLocalTime():HH:mm} 结束" : "剩余时间";
                     ClockWarning = left.TotalMinutes < 5;
                     break;
                 default:
                     Clock = "00:00";
-                    ClockLabel = "考试已结束";
+                    ClockLabel = exam.EndedAt.HasValue ? $"考试已结束 · {exam.EndedAt.Value.ToLocalTime():HH:mm}" : "考试已结束";
                     break;
             }
         }
@@ -274,12 +276,38 @@ namespace MdQuiz.Teacher.ViewModels
             Ui.Toast("考试已开始");
         }
 
+        /// <summary>快捷加减时间：参数为分钟数，负数表示缩短。</summary>
         [RelayCommand]
-        private void Extend(string minutes)
+        private void AdjustTime(string minutes)
         {
-            if (!int.TryParse(minutes, out var m) || m <= 0) return;
-            S.Host.ExtendExam(m);
-            Ui.Toast($"已延长 {m} 分钟");
+            if (!int.TryParse(minutes, NumberStyles.Integer, CultureInfo.InvariantCulture, out var m) || m == 0) return;
+            ApplyTimeChange(m, confirm: m < 0);
+        }
+
+        [RelayCommand]
+        private void CustomTime()
+        {
+            var dialog = new TimeAdjustWindow();
+            if (Ui.ShowDialog(dialog) != true) return;
+            ApplyTimeChange(dialog.Minutes, confirm: false);
+        }
+
+        private void ApplyTimeChange(int minutes, bool confirm)
+        {
+            var exam = S.Host.CurrentExam;
+            if (exam?.DeadlineUtc == null) return;
+            var newEnd = exam.DeadlineUtc.Value.AddMinutes(minutes).ToLocalTime();
+            if (confirm && !Ui.ConfirmDanger($"确定将考试时间缩短 {-minutes} 分钟吗？\n\n调整后 {newEnd:HH:mm} 结束，学生端倒计时会立即同步。", "缩短考试时间"))
+                return;
+            try
+            {
+                var deadline = S.Host.AdjustTime(minutes);
+                Ui.Toast($"已{(minutes > 0 ? "延长" : "缩短")} {Math.Abs(minutes)} 分钟，{deadline.ToLocalTime():HH:mm} 结束");
+            }
+            catch (InvalidOperationException ex)
+            {
+                Ui.Error(ex.Message, "无法调整时间");
+            }
         }
 
         [RelayCommand]
@@ -325,6 +353,15 @@ namespace MdQuiz.Teacher.ViewModels
             if (p == null) return;
             if (!Ui.Confirm($"允许 {p.Name}（{p.StudentNo}）换到其他电脑登录吗？\n\n当前电脑会退出，已保存的答案会保留。")) return;
             S.Host.ReleaseStudent(p.StudentNo);
+        }
+
+        /// <summary>查看考生答卷（双击学生卡片）。</summary>
+        [RelayCommand]
+        private void ViewAnswers(ParticipantItem p)
+        {
+            var exam = S.Host.CurrentExam;
+            if (exam == null || p == null) return;
+            StudentAnswersWindow.Open(exam.Id, p.StudentNo, ParticipantsView.Cast<ParticipantItem>().Concat(Participants).Select(x => x.StudentNo));
         }
 
         [RelayCommand]

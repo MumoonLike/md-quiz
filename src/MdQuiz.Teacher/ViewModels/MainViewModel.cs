@@ -1,10 +1,14 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MdQuiz.Core.Net;
+using MdQuiz.Server.Mcp;
 using MdQuiz.Teacher.Services;
 using MdQuiz.Wpf;
+using MdQuiz.Wpf.Converters;
 
 namespace MdQuiz.Teacher.ViewModels
 {
@@ -18,6 +22,17 @@ namespace MdQuiz.Teacher.ViewModels
         public virtual void OnActivated()
         {
         }
+    }
+
+    /// <summary>MCP 调用记录（设置页显示）。</summary>
+    public class McpLogItem
+    {
+        public string Time { get; set; }
+        public string Title { get; set; }
+        public string Message { get; set; }
+        public string LevelText { get; set; }
+        public Color Color { get; set; }
+        public string Client { get; set; }
     }
 
     public partial class MainViewModel : ObservableObject
@@ -59,6 +74,14 @@ namespace MdQuiz.Teacher.ViewModels
         [ObservableProperty]
         private string _serverAddress = "";
 
+        [ObservableProperty]
+        private bool _mcpRunning;
+
+        [ObservableProperty]
+        private string _mcpStatus = "";
+
+        public ObservableCollection<McpLogItem> McpLog { get; } = new ObservableCollection<McpLogItem>();
+
         [RelayCommand]
         public void Navigate(string key)
         {
@@ -93,6 +116,8 @@ namespace MdQuiz.Teacher.ViewModels
         public void Initialize()
         {
             StartServer();
+            AppServices.Current.Mcp.Activity += a => Ui.OnUi(() => OnMcpActivity(a));
+            ApplyMcp(showSuccess: false);
             var active = AppServices.Current.Exams.FindActive();
             if (active != null && ServerRunning)
             {
@@ -131,6 +156,69 @@ namespace MdQuiz.Teacher.ViewModels
         {
             AppServices.Current.Host.Stop();
             StartServer();
+        }
+
+        /// <summary>按设置启动 / 停止 MCP 服务并刷新状态。</summary>
+        public bool ApplyMcp(bool showSuccess)
+        {
+            var s = AppServices.Current;
+            var error = s.ApplyMcp();
+            UpdateMcpStatus();
+            if (error != null)
+            {
+                Ui.ToastError(error);
+                return false;
+            }
+            if (showSuccess) Ui.Toast(s.Mcp.IsRunning ? "MCP 服务已启动" : "MCP 服务已关闭");
+            return true;
+        }
+
+        public void UpdateMcpStatus()
+        {
+            var mcp = AppServices.Current.Mcp;
+            McpRunning = mcp.IsRunning;
+            if (!mcp.IsRunning)
+            {
+                McpStatus = AppServices.Current.McpEnabled ? "MCP 未启动" : "";
+                return;
+            }
+            var options = mcp.Options;
+            McpStatus = $"MCP 运行中 · {(options.AllowLan ? "局域网" : "本机")} {mcp.Port}";
+        }
+
+        private void OnMcpActivity(McpActivity a)
+        {
+            Color color;
+            switch (a.Level)
+            {
+                case McpPermissions.Control: color = Palette.Red; break;
+                case McpPermissions.Edit: color = Palette.Amber; break;
+                default: color = Palette.Blue; break;
+            }
+            McpLog.Insert(0, new McpLogItem
+            {
+                Time = a.Time.ToString("HH:mm:ss"),
+                Title = a.Title,
+                Message = a.Success ? a.Message : "失败：" + a.Message,
+                LevelText = a.Level == McpPermissions.Read ? "查询" : a.Level == McpPermissions.Edit ? "编辑" : "控制",
+                Color = a.Success ? color : Palette.Gray,
+                Client = a.Client,
+            });
+            while (McpLog.Count > 100) McpLog.RemoveAt(McpLog.Count - 1);
+            Log.Info($"[MCP] {a.Client} {a.Tool} {(a.Success ? "成功" : "失败")}：{a.Message}");
+            if (a.Level == McpPermissions.Read || !a.Success) return;
+
+            // AI 助手修改了数据：提示老师，并刷新当前页面（正在编辑的试卷不打断）
+            Ui.ToastInfo("AI 助手（MCP）：" + a.Message);
+            if (CurrentPage == null || CurrentPage == Monitor || (CurrentPage == Papers && Papers.IsDirty)) return;
+            try
+            {
+                CurrentPage.OnActivated();
+            }
+            catch (Exception ex)
+            {
+                Log.Error("MCP 操作后刷新页面失败", ex);
+            }
         }
 
         public void UpdateAddress()

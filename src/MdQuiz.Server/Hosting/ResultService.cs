@@ -119,6 +119,40 @@ namespace MdQuiz.Server.Hosting
             };
         }
 
+        /// <summary>
+        /// 一名考生的答卷（按试卷题目顺序）。未交卷时客观题按当前答案临时判分（<see cref="AnswerSheetItem.Provisional"/>）。
+        /// </summary>
+        public List<AnswerSheetItem> BuildAnswerSheet(Exam exam, string studentNo)
+        {
+            var answers = _exams.ListAnswers(exam.Id, studentNo).ToDictionary(a => a.QuestionId);
+            return exam.Questions.Select((q, i) => SheetItem(exam, q, i + 1, answers.TryGetValue(q.Id, out var a) ? a : null)).ToList();
+        }
+
+        public static AnswerSheetItem SheetItem(Exam exam, ExamQuestion q, int number, AnswerRecord a)
+        {
+            var values = a?.Values ?? new List<string>();
+            var item = new AnswerSheetItem
+            {
+                Number = number,
+                Question = q,
+                Values = values,
+                Answered = !AnswerValues.IsEmpty(values),
+                Manual = a?.Manual ?? false,
+                Score = a?.Score,
+            };
+            if (item.Score == null && QuestionTypes.IsAutoGraded(q.Type))
+            {
+                item.Score = Grader.Grade(q, values, exam.Settings.MultipleMode) ?? 0;
+                item.Provisional = true;
+            }
+            if (!item.Answered && !item.Manual) item.Verdict = AnswerVerdict.Unanswered;
+            else if (!QuestionTypes.IsAutoGraded(q.Type) && !item.Manual) item.Verdict = item.Score.HasValue ? AnswerVerdict.Graded : AnswerVerdict.Pending;
+            else if (item.Score == null) item.Verdict = AnswerVerdict.Pending;
+            else if (item.Score.Value >= q.Score - 1e-9) item.Verdict = AnswerVerdict.Correct;
+            else item.Verdict = item.Score.Value > 1e-9 ? AnswerVerdict.Partial : AnswerVerdict.Wrong;
+            return item;
+        }
+
         /// <summary>成绩表：每名考生一行，含各题得分。</summary>
         public ResultTable BuildTable(Exam exam)
         {
@@ -139,6 +173,36 @@ namespace MdQuiz.Server.Hosting
             }
             return table;
         }
+    }
+
+    public enum AnswerVerdict
+    {
+        /// <summary>未作答。</summary>
+        Unanswered,
+        Correct,
+        /// <summary>部分得分（多选少选、填空部分正确等）。</summary>
+        Partial,
+        Wrong,
+        /// <summary>简答题待批改。</summary>
+        Pending,
+        /// <summary>简答题已批改。</summary>
+        Graded,
+    }
+
+    /// <summary>答卷中的一道题。</summary>
+    public class AnswerSheetItem
+    {
+        public int Number { get; set; }
+        public ExamQuestion Question { get; set; }
+        public List<string> Values { get; set; } = new List<string>();
+        public bool Answered { get; set; }
+        /// <summary>得分；简答题未批改时为 null。</summary>
+        public double? Score { get; set; }
+        /// <summary>得分是按当前答案临时计算的（考生尚未交卷）。</summary>
+        public bool Provisional { get; set; }
+        /// <summary>分数由教师人工给出。</summary>
+        public bool Manual { get; set; }
+        public AnswerVerdict Verdict { get; set; }
     }
 
     public class ResultTable

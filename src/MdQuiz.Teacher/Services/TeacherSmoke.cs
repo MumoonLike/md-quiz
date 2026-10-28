@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using MdQuiz.Core.Models;
+using MdQuiz.Server.Mcp;
 using MdQuiz.Server.Services;
 using MdQuiz.Teacher.ViewModels;
 using MdQuiz.Teacher.Views;
@@ -68,6 +71,78 @@ namespace MdQuiz.Teacher.Services
             SmokeKit.Capture(main, name);
         }
 
+        /// <summary>在 .NET Framework 上启动 MCP 服务，用真实 HTTP 请求调用一次，并截图设置页。</summary>
+        private static async Task CheckMcp(AppServices s, MainWindow main)
+        {
+            s.SaveMcpOptions(new McpOptions { Port = 47330, Permissions = McpPermissions.Read | McpPermissions.Edit });
+            s.McpEnabled = true;
+            MainViewModel.Instance.ApplyMcp(showSuccess: false);
+            if (!s.Mcp.IsRunning)
+            {
+                SmokeKit.Error("mcp server did not start");
+                return;
+            }
+            foreach (var body in new[]
+            {
+                "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\"}}",
+                "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"get_overview\",\"arguments\":{}}}",
+            })
+            {
+                try
+                {
+                    var response = await Task.Run(() =>
+                    {
+                        var request = (HttpWebRequest)WebRequest.Create($"http://127.0.0.1:{s.Mcp.Port}{McpServer.Endpoint}");
+                        request.Method = "POST";
+                        request.ContentType = "application/json";
+                        request.Accept = "application/json, text/event-stream";
+                        var bytes = Encoding.UTF8.GetBytes(body);
+                        using (var stream = request.GetRequestStream()) stream.Write(bytes, 0, bytes.Length);
+                        using (var reply = (HttpWebResponse)request.GetResponse())
+                        using (var reader = new StreamReader(reply.GetResponseStream(), Encoding.UTF8))
+                            return reader.ReadToEnd();
+                    });
+                    SmokeKit.Step("mcp: " + (response.Length > 300 ? response.Substring(0, 300) + "…" : response));
+                    if (!response.Contains("\"result\"") || response.Contains("\"isError\":true")) SmokeKit.Error("mcp call failed: " + response);
+                }
+                catch (Exception ex)
+                {
+                    SmokeKit.Error("mcp request failed", ex);
+                }
+            }
+            await SmokeKit.Settle(500);
+            await Page(main, "settings", "teacher-settings-mcp");
+
+            // 复制到剪贴板（设置页“复制”按钮使用的方式）；CI 环境的剪贴板可能不可用，只记录结果
+            var copied = ClipboardText.TrySet("mdquiz-smoke-" + s.Mcp.Port);
+            string pasted;
+            try
+            {
+                pasted = Clipboard.GetText();
+            }
+            catch (Exception ex)
+            {
+                pasted = "(GetText failed: " + ex.Message + ")";
+            }
+            SmokeKit.Step($"clipboard copy: {copied}, read back: {pasted}");
+        }
+
+        /// <summary>打开考生答卷窗口并截图。</summary>
+        private static async Task CaptureAnswers(long examId, string studentNo, string name)
+        {
+            SmokeKit.Step("open " + name);
+            StudentAnswersWindow.Open(examId, studentNo, null);
+            await SmokeKit.Settle(1200);
+            var window = Application.Current.Windows.OfType<StudentAnswersWindow>().FirstOrDefault();
+            if (window == null)
+            {
+                SmokeKit.Error("answers window not opened");
+                return;
+            }
+            SmokeKit.Capture(window, name);
+            window.Close();
+        }
+
         private static async Task RunCore(AppServices s)
         {
             // 登录窗口：首次使用和正常两种状态
@@ -101,6 +176,7 @@ namespace MdQuiz.Teacher.Services
             var paper = new Paper
             {
                 Name = "冒烟测试试卷",
+                GroupId = s.Papers.AddGroup("冒烟测试分组"),
                 Items = valid.Select(q => new PaperItem { QuestionId = q.Question.Id, Score = q.Score ?? 2 }).ToList(),
             };
             s.Papers.Save(paper);
@@ -120,6 +196,7 @@ namespace MdQuiz.Teacher.Services
             await Page(main, "exams", "teacher-exams");
             await Page(main, "results", "teacher-results-empty");
             await Page(main, "settings", "teacher-settings");
+            await CheckMcp(s, main);
             await Page(main, "monitor", "teacher-monitor-empty");
 
             // ---------- 对话框 ----------
@@ -147,6 +224,7 @@ namespace MdQuiz.Teacher.Services
             await SmokeKit.WaitUntil(() => s.Host.GetParticipants().Any(p => p.Answered >= 3), 180000, "student answers");
             await SmokeKit.Settle(800);
             SmokeKit.Capture(main, "teacher-monitor-running");
+            await CaptureAnswers(examId, s.Host.GetParticipants().First(p => p.Answered > 0).StudentNo, "teacher-answers-live");
             await SmokeKit.WaitUntil(() => s.Host.GetParticipants().Any(p => p.Status == ParticipantStatus.Submitted), 240000, "student submit");
             await SmokeKit.Settle(800);
             SmokeKit.Capture(main, "teacher-monitor-submitted");
@@ -161,6 +239,7 @@ namespace MdQuiz.Teacher.Services
             SmokeKit.Capture(main, "teacher-results");
             var exam = s.Exams.Get(examId);
             await Show(main, new GradingWindow(exam), "teacher-grading");
+            await CaptureAnswers(examId, s.Exams.ListParticipants(examId).First(p => p.Status == ParticipantStatus.Submitted).StudentNo, "teacher-answers-final");
             ExcelService.ExportResults(Path.Combine(SmokeKit.OutDir, "results.xlsx"), s.Results.BuildTable(exam));
 
             // 最小窗口尺寸下的布局

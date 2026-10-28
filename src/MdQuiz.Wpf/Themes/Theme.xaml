@@ -9,6 +9,7 @@
         <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml" />
         <ResourceDictionary Source="pack://application:,,,/MdQuiz.Wpf;component/Themes/Palette.xaml" />
         <ResourceDictionary Source="pack://application:,,,/MdQuiz.Wpf;component/Themes/Icons.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/MdQuiz.Wpf;component/Themes/Brand.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <!-- ============ 转换器 ============ -->
@@ -107,8 +108,8 @@
     <Style x:Key="NavItem" TargetType="RadioButton">
         <Setter Property="Foreground" Value="#C3CCF0" />
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="Height" Value="44" />
-        <Setter Property="Margin" Value="12,3" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Margin" Value="12,2" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
@@ -191,7 +192,7 @@
     </Style>
 
     <!-- ============ 选项卡片（学生答题） ============ -->
-    <Style x:Key="OptionCard" TargetType="ToggleButton">
+    <Style x:Key="ChoiceCard" TargetType="ctl:ChoiceButton">
         <Setter Property="Background" Value="{DynamicResource RegionBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -203,33 +204,49 @@
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="ToggleButton">
+                <ControlTemplate TargetType="ctl:ChoiceButton">
                     <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="1.5" CornerRadius="10" Padding="{TemplateBinding Padding}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <Border x:Name="Badge" Width="32" Height="32" CornerRadius="16" VerticalAlignment="Top"
                                     Background="{DynamicResource SecondaryRegionBrush}">
-                                <TextBlock x:Name="Letter" Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
+                                <TextBlock x:Name="Letter" Text="{TemplateBinding Label}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold"
                                            Foreground="{DynamicResource SecondaryTextBrush}" />
                             </Border>
                             <ContentPresenter Grid.Column="1" Margin="14,4,0,0" VerticalAlignment="Center" />
+                            <Path x:Name="Tick" Grid.Column="2" Data="{StaticResource Icon.Check}" Width="18" Height="18" Stretch="Uniform" Margin="12,0,0,0"
+                                  Fill="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" Visibility="Collapsed" />
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="IsMultiple" Value="True">
+                            <Setter TargetName="Badge" Property="CornerRadius" Value="7" />
+                        </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource SecondaryBorderBrush}" />
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}" />
                         </Trigger>
-                        <Trigger Property="IsChecked" Value="True">
+                        <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource LightPrimaryBrush}" />
                             <Setter TargetName="Badge" Property="Background" Value="{DynamicResource PrimaryBrush}" />
                             <Setter TargetName="Letter" Property="Foreground" Value="White" />
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsSelected" Value="True" />
+                                <Condition Property="IsMultiple" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Tick" Property="Visibility" Value="Visible" />
+                        </MultiTrigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Opacity" Value="0.85" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Bd" Property="Opacity" Value="0.7" />
@@ -376,5 +393,104 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="TextAlignment" Value="Center" />
         <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <!-- ============ 右下角通知 ============ -->
+    <Style TargetType="ctl:ToastHost">
+        <Setter Property="Width" Value="380" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+        <Setter Property="Panel.ZIndex" Value="1000" />
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel VerticalAlignment="Bottom" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ctl:ToastHost">
+                    <ItemsPresenter />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemTemplate">
+            <Setter.Value>
+                <DataTemplate DataType="{x:Type ctl:ToastItem}">
+                    <Border x:Name="Card" Background="{DynamicResource RegionBrush}" CornerRadius="10" BorderThickness="1"
+                            BorderBrush="{DynamicResource CardBorderBrush}" Margin="0,10,0,0">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="22" ShadowDepth="4" Direction="270" Opacity="0.16" Color="#1F2A44" />
+                        </Border.Effect>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border x:Name="IconBg" Width="30" Height="30" CornerRadius="15" Margin="14,13,0,0" VerticalAlignment="Top"
+                                    Background="{DynamicResource LightSuccessBrush}">
+                                <Path x:Name="IconPath" Data="{StaticResource Icon.CheckCircle}" Width="17" Height="17" Stretch="Uniform"
+                                      Fill="{DynamicResource SuccessBrush}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="12,14,4,13">
+                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13.5" LineHeight="20"
+                                           Foreground="{DynamicResource PrimaryTextBrush}" />
+                                <StackPanel Margin="0,8,0,0" Visibility="{Binding HasFile, Converter={StaticResource BoolToVis}}">
+                                    <Border Background="{DynamicResource SecondaryRegionBrush}" CornerRadius="6" Padding="8,5" HorizontalAlignment="Left"
+                                            ToolTip="{Binding FilePath}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Path Data="{StaticResource Icon.FileDocumentEditOutline}" Width="13" Height="13" Stretch="Uniform"
+                                                  Fill="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding FileName}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" Margin="6,0,0,0"
+                                                       MaxWidth="250" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+                                    <StackPanel Orientation="Horizontal" Margin="-4,6,0,0">
+                                        <Button Style="{StaticResource LinkButton}" Command="{Binding RevealCommand}" FontSize="13">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Path Data="{StaticResource Icon.FolderOpenOutline}" Width="14" Height="14" Stretch="Uniform"
+                                                      Fill="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" />
+                                                <TextBlock Text="在资源管理器中打开" Margin="5,0,0,0" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button x:Name="OpenButton" Style="{StaticResource LinkButton}" Command="{Binding OpenFileCommand}" FontSize="13" Margin="6,0,0,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Path Data="{StaticResource Icon.OpenInNew}" Width="13" Height="13" Stretch="Uniform"
+                                                      Fill="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" />
+                                                <TextBlock Text="打开文件" Margin="5,0,0,0" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                            <Button Grid.Column="2" Style="{StaticResource ButtonIcon}" hc:IconElement.Geometry="{StaticResource Icon.Close}" ToolTip="关闭"
+                                    Foreground="{DynamicResource ThirdlyTextBrush}" Width="28" Height="28" Padding="8" Margin="0,8,8,0" VerticalAlignment="Top"
+                                    Command="{Binding CloseCommand}" />
+                        </Grid>
+                    </Border>
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding Kind}" Value="Info">
+                            <Setter TargetName="IconBg" Property="Background" Value="{DynamicResource LightPrimaryBrush}" />
+                            <Setter TargetName="IconPath" Property="Data" Value="{StaticResource Icon.InformationOutline}" />
+                            <Setter TargetName="IconPath" Property="Fill" Value="{DynamicResource PrimaryBrush}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Kind}" Value="Warning">
+                            <Setter TargetName="IconBg" Property="Background" Value="{DynamicResource LightWarningBrush}" />
+                            <Setter TargetName="IconPath" Property="Data" Value="{StaticResource Icon.AlertCircleOutline}" />
+                            <Setter TargetName="IconPath" Property="Fill" Value="{DynamicResource WarningBrush}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Kind}" Value="Error">
+                            <Setter TargetName="IconBg" Property="Background" Value="{DynamicResource LightDangerBrush}" />
+                            <Setter TargetName="IconPath" Property="Data" Value="{StaticResource Icon.CloseCircleOutline}" />
+                            <Setter TargetName="IconPath" Property="Fill" Value="{DynamicResource DangerBrush}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsDirectory}" Value="True">
+                            <Setter TargetName="OpenButton" Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 </ResourceDictionary>

@@ -218,9 +218,16 @@ namespace MdQuiz.Teacher.ViewModels
             if (list.Count == 0) return;
             var dlg = new SaveFileDialog { Filter = "Markdown 文件|*.md", FileName = "题库导出.md" };
             if (dlg.ShowDialog() != true) return;
-            var md = QuestionMarkdown.Write(list.Select(q => new KeyValuePair<Question, double?>(q, null)), "题库导出");
-            File.WriteAllText(dlg.FileName, md, new System.Text.UTF8Encoding(true));
-            Ui.Toast($"已导出 {list.Count} 道题");
+            try
+            {
+                var md = QuestionMarkdown.Write(list.Select(q => new KeyValuePair<Question, double?>(q, null)), "题库导出");
+                File.WriteAllText(dlg.FileName, md, new System.Text.UTF8Encoding(true));
+                Ui.ToastFile($"已导出 {list.Count} 道题", dlg.FileName);
+            }
+            catch (Exception ex)
+            {
+                Ui.Error("导出失败：" + ex.Message);
+            }
         }
 
         [RelayCommand]
@@ -228,8 +235,15 @@ namespace MdQuiz.Teacher.ViewModels
         {
             var dlg = new SaveFileDialog { Filter = "Excel 文件|*.xlsx", FileName = "题目导入模板.xlsx" };
             if (dlg.ShowDialog() != true) return;
-            ExcelService.WriteQuestionTemplate(dlg.FileName);
-            Ui.Toast("模板已保存");
+            try
+            {
+                ExcelService.WriteQuestionTemplate(dlg.FileName);
+                Ui.ToastFile("题目导入模板已保存", dlg.FileName);
+            }
+            catch (Exception ex)
+            {
+                Ui.Error("保存失败：" + ex.Message + "\n\n如果同名文件已在 Excel 中打开，请先关闭。");
+            }
         }
 
         [RelayCommand]

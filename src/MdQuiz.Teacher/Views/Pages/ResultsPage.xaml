@@ -15,6 +15,8 @@
                         Visibility="{Binding HasExam, Converter={StaticResource BoolToVis}}">
                 <Button Style="{StaticResource ButtonIcon}" hc:IconElement.Geometry="{StaticResource Icon.Refresh}" ToolTip="刷新"
                         Foreground="{DynamicResource SecondaryTextBrush}" Width="36" Height="36" Margin="0,0,8,0" Command="{Binding RefreshCommand}" />
+                <Button Content="查看答卷" Style="{StaticResource ButtonDefault}" Height="36" Margin="0,0,8,0" ToolTip="查看选中考生的答题情况（也可以双击成绩表中的一行）"
+                        hc:IconElement.Geometry="{StaticResource Icon.EyeOutline}" Command="{Binding ViewAnswersCommand}" />
                 <Button Content="导出 Excel" Style="{StaticResource ButtonDefault}" Height="36" Margin="0,0,8,0"
                         hc:IconElement.Geometry="{StaticResource Icon.Export}" Command="{Binding ExportCommand}" />
                 <Button Content="批改 / 改分" Style="{StaticResource ButtonPrimary}" Height="36"
@@ -100,8 +102,9 @@
 
         <!-- 成绩表 -->
         <Border Grid.Row="2" Style="{StaticResource Card}" Padding="0" Visibility="{Binding HasExam, Converter={StaticResource BoolToVis}}">
-            <DataGrid ItemsSource="{Binding Rows}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
-                      CanUserAddRows="False" BorderThickness="0" Background="Transparent" RowHeight="40">
+            <DataGrid x:Name="ResultGrid" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedRow}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
+                      CanUserAddRows="False" BorderThickness="0" Background="Transparent" RowHeight="40" SelectionMode="Single"
+                      MouseDoubleClick="OnGridDoubleClick" ToolTip="双击查看考生答卷">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="学号" Binding="{Binding StudentNo}" Width="130" />
                     <DataGridTextColumn Header="姓名" Binding="{Binding Name}" Width="110" />

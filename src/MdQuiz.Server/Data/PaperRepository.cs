@@ -22,6 +22,7 @@ namespace MdQuiz.Server.Data
             public string Name { get; set; }
             public string Description { get; set; }
             public string ItemsJson { get; set; }
+            public long? GroupId { get; set; }
             public long CreatedAt { get; set; }
             public long UpdatedAt { get; set; }
 
@@ -30,6 +31,7 @@ namespace MdQuiz.Server.Data
                 Id = Id,
                 Name = Name ?? "",
                 Description = Description ?? "",
+                GroupId = GroupId,
                 Items = Json.Deserialize<List<PaperItem>>(ItemsJson) ?? new List<PaperItem>(),
                 CreatedAt = Time.FromUnixMs(CreatedAt),
                 UpdatedAt = Time.FromUnixMs(UpdatedAt),
@@ -49,16 +51,18 @@ namespace MdQuiz.Server.Data
         public long Save(Paper paper)
         {
             var now = Time.ToUnixMs(DateTime.UtcNow);
-            var args = new { paper.Id, Name = paper.Name ?? "", Description = paper.Description ?? "", ItemsJson = Json.Serialize(paper.Items), Now = now };
+            var args = new { paper.Id, Name = paper.Name ?? "", Description = paper.Description ?? "", ItemsJson = Json.Serialize(paper.Items), paper.GroupId, Now = now };
             return _db.Write((c, t) =>
             {
+                if (paper.GroupId.HasValue && c.ExecuteScalar<long>("SELECT COUNT(*) FROM paper_groups WHERE id = @GroupId", args, t) == 0)
+                    throw new InvalidOperationException("试卷分组不存在");
                 if (paper.Id > 0)
                 {
-                    c.Execute("UPDATE papers SET name = @Name, description = @Description, items_json = @ItemsJson, updated_at = @Now WHERE id = @Id", args, t);
+                    c.Execute("UPDATE papers SET name = @Name, description = @Description, items_json = @ItemsJson, group_id = @GroupId, updated_at = @Now WHERE id = @Id", args, t);
                 }
                 else
                 {
-                    c.Execute("INSERT INTO papers(name, description, items_json, created_at, updated_at) VALUES(@Name, @Description, @ItemsJson, @Now, @Now)", args, t);
+                    c.Execute("INSERT INTO papers(name, description, items_json, group_id, created_at, updated_at) VALUES(@Name, @Description, @ItemsJson, @GroupId, @Now, @Now)", args, t);
                     paper.Id = c.ExecuteScalar<long>("SELECT last_insert_rowid()", transaction: t);
                     paper.CreatedAt = Time.FromUnixMs(now);
                 }
@@ -70,6 +74,63 @@ namespace MdQuiz.Server.Data
         public void Delete(long id)
         {
             _db.Write((c, t) => c.Execute("DELETE FROM papers WHERE id = @id", new { id }, t));
+        }
+
+        // ---------------- 分组 ----------------
+
+        public List<PaperGroup> ListGroups()
+        {
+            return _db.Read(c => c.Query<PaperGroup>(
+                "SELECT g.id, g.name, g.sort_order, (SELECT COUNT(*) FROM papers p WHERE p.group_id = g.id) AS paper_count FROM paper_groups g ORDER BY g.sort_order, g.name").ToList());
+        }
+
+        public long AddGroup(string name)
+        {
+            name = (name ?? "").Trim();
+            if (name.Length == 0) throw new ArgumentException("分组名称不能为空");
+            return _db.Write((c, t) =>
+            {
+                if (c.ExecuteScalar<long>("SELECT COUNT(*) FROM paper_groups WHERE name = @name", new { name }, t) > 0)
+                    throw new InvalidOperationException($"分组“{name}”已存在");
+                var order = c.ExecuteScalar<long>("SELECT COALESCE(MAX(sort_order), 0) + 1 FROM paper_groups", transaction: t);
+                c.Execute("INSERT INTO paper_groups(name, sort_order) VALUES(@name, @order)", new { name, order }, t);
+                return c.ExecuteScalar<long>("SELECT last_insert_rowid()", transaction: t);
+            });
+        }
+
+        public void RenameGroup(long id, string name)
+        {
+            name = (name ?? "").Trim();
+            if (name.Length == 0) throw new ArgumentException("分组名称不能为空");
+            _db.Write((c, t) =>
+            {
+                if (c.ExecuteScalar<long>("SELECT COUNT(*) FROM paper_groups WHERE name = @name AND id <> @id", new { name, id }, t) > 0)
+                    throw new InvalidOperationException($"分组“{name}”已存在");
+                c.Execute("UPDATE paper_groups SET name = @name WHERE id = @id", new { name, id }, t);
+            });
+        }
+
+        /// <summary>删除分组；组内试卷不删除，变为未分组。</summary>
+        public void DeleteGroup(long id)
+        {
+            _db.Write((c, t) =>
+            {
+                c.Execute("UPDATE papers SET group_id = NULL WHERE group_id = @id", new { id }, t);
+                c.Execute("DELETE FROM paper_groups WHERE id = @id", new { id }, t);
+            });
+        }
+
+        /// <summary>把试卷移动到分组；<paramref name="groupId"/> 为 null 表示移出分组。</summary>
+        public int MoveToGroup(IEnumerable<long> paperIds, long? groupId)
+        {
+            var list = paperIds.Distinct().ToList();
+            if (list.Count == 0) return 0;
+            return _db.Write((c, t) =>
+            {
+                if (groupId.HasValue && c.ExecuteScalar<long>("SELECT COUNT(*) FROM paper_groups WHERE id = @groupId", new { groupId }, t) == 0)
+                    throw new InvalidOperationException("试卷分组不存在");
+                return c.Execute("UPDATE papers SET group_id = @groupId WHERE id IN @list", new { groupId, list }, t);
+            });
         }
     }
 

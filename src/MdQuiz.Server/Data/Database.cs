@@ -11,7 +11,7 @@ namespace MdQuiz.Server.Data
     /// </summary>
     public sealed class Database
     {
-        private const int SchemaVersion = 1;
+        private const int SchemaVersion = 2;
         private readonly object _writeLock = new object();
         private readonly string _connectionString;
 
@@ -83,16 +83,19 @@ namespace MdQuiz.Server.Data
                 {
                     conn.Execute("PRAGMA journal_mode = WAL;");
                     var version = conn.ExecuteScalar<long>("PRAGMA user_version;");
-                    if (version < 1)
-                    {
-                        using (var tx = conn.BeginTransaction())
-                        {
-                            conn.Execute(Schema.V1, transaction: tx);
-                            conn.Execute($"PRAGMA user_version = {SchemaVersion};", transaction: tx);
-                            tx.Commit();
-                        }
-                    }
+                    if (version < 1) Upgrade(conn, Schema.V1, 1);
+                    if (version < 2) Upgrade(conn, Schema.V2, 2);
                 }
+            }
+        }
+
+        private static void Upgrade(IDbConnection conn, string sql, int toVersion)
+        {
+            using (var tx = conn.BeginTransaction())
+            {
+                conn.Execute(sql, transaction: tx);
+                conn.Execute($"PRAGMA user_version = {toVersion};", transaction: tx);
+                tx.Commit();
             }
         }
 
@@ -211,6 +214,17 @@ CREATE TABLE IF NOT EXISTS answers (
     PRIMARY KEY (exam_id, student_no, question_id)
 );
 CREATE INDEX IF NOT EXISTS ix_answers_question ON answers(exam_id, question_id);
+";
+
+        /// <summary>v2：试卷分组。</summary>
+        public const string V2 = @"
+CREATE TABLE IF NOT EXISTS paper_groups (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT    NOT NULL UNIQUE,
+    sort_order INTEGER NOT NULL DEFAULT 0
+);
+ALTER TABLE papers ADD COLUMN group_id INTEGER REFERENCES paper_groups(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS ix_papers_group ON papers(group_id);
 ";
     }
 

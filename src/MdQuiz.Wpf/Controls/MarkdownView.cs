@@ -270,8 +270,10 @@ namespace MdQuiz.Wpf.Controls
                 }
                 rowIndex++;
             }
+            // 不可获得焦点：否则 ScrollViewer 会吞掉鼠标按下事件，放在选项按钮里时点击无反应
             return new ScrollViewer
             {
+                Focusable = false,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
                 Content = grid,
