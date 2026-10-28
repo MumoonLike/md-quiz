@@ -42,6 +42,16 @@ function Firewall-Rule-Exists {
     return $LASTEXITCODE -eq 0
 }
 
+# 快捷方式是否指向 target。.lnk 中的路径以 UTF-16 保存；WScript.Shell 按系统 ANSI 代码页读取，
+# 在英文系统上会把中文变成 ?，所以直接在文件内容中查找（UTF-16 字符串可能从奇数偏移开始，两种对齐都试）
+function Link-Points-To([string] $link, [string] $target) {
+    if (-not (Test-Path $link)) { return $false }
+    $bytes = [IO.File]::ReadAllBytes($link)
+    $even = [Text.Encoding]::Unicode.GetString($bytes)
+    $odd = [Text.Encoding]::Unicode.GetString($bytes, 1, $bytes.Length - 1)
+    return $even.Contains($target) -or $odd.Contains($target)
+}
+
 function Install([string] $logName) {
     # /D= 必须放在最后，路径中的空格不需要引号
     return Run-Setup $Setup @('/S', "/D=$installDir") $logName
@@ -74,10 +84,9 @@ Check $usersCanWrite 'data 目录允许 Users 修改'
 $reg = Get-ItemProperty $regKey -ErrorAction SilentlyContinue
 Check ($null -ne $reg -and $reg.DisplayName -eq $displayName) "控制面板卸载信息：$($reg.DisplayName) $($reg.DisplayVersion)"
 Check ($null -ne $reg -and $reg.InstallLocation -eq $installDir) "InstallLocation = $($reg.InstallLocation)"
-$shell = New-Object -ComObject WScript.Shell
 foreach ($link in @($desktopLink, $startLink)) {
-    $target = if (Test-Path $link) { $shell.CreateShortcut($link).TargetPath } else { $null }
-    Check ($target -eq (Join-Path $installDir $exe)) "快捷方式 $link"
+    Check (Test-Path $link) "快捷方式 $link"
+    Check (Link-Points-To $link (Join-Path $installDir $exe)) '  指向安装目录中的程序'
 }
 
 Write-Host '== 2. 启动安装好的程序（依赖从 lib 加载）'

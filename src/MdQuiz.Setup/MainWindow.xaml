@@ -95,7 +95,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <Border x:Name="UpgradeNotice" Grid.Row="0" Visibility="Collapsed" CornerRadius="8" Background="{StaticResource LightPrimaryBrush}" Padding="12,10">
+                    <Border x:Name="UpgradeNotice" Grid.Row="0" Grid.RowSpan="2" Margin="0,0,0,24" VerticalAlignment="Center" Visibility="Collapsed" CornerRadius="8" Background="{StaticResource LightPrimaryBrush}" Padding="12,10">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />

@@ -156,15 +156,18 @@ namespace MdQuiz.Setup
             LaunchButton.Focus();
         }
 
+        /// <summary>安装完成后“立即启动”；卸载完成后“打开数据文件夹”。</summary>
         private void OnLaunchClick(object sender, RoutedEventArgs e)
         {
             try
             {
-                Shell.OpenAsUser(Path.Combine(_installedDir, _product.ExeName));
+                Shell.OpenAsUser(_context.IsUninstall
+                    ? Path.Combine(_context.UninstallDir, Installer.DataDirName)
+                    : Path.Combine(_installedDir, _product.ExeName));
             }
             catch (Exception ex)
             {
-                SetupLog.Error("启动程序失败", ex);
+                SetupLog.Error(_context.IsUninstall ? "打开数据文件夹失败" : "启动程序失败", ex);
             }
             Close();
         }
@@ -195,14 +198,20 @@ namespace MdQuiz.Setup
             var ok = await RunWithProgressAsync(progress => Installer.Uninstall(dir, deleteData, progress));
             if (!ok) return;
             _uninstalled = true;
-            var dataDir = Path.Combine(dir, Installer.DataDirName);
-            DoneTitle.Text = "卸载完成";
-            DoneDetail.Text = !deleteData && Directory.Exists(dataDir)
-                ? $"{_product.DisplayName} 已从这台电脑上移除。\n数据保留在 {dataDir}，重新安装到相同位置会继续使用。"
-                : $"{_product.DisplayName} 已从这台电脑上移除。";
-            LaunchButton.Visibility = Visibility.Collapsed;
+            ShowUninstallDone(Directory.Exists(Path.Combine(dir, Installer.DataDirName)));
             ShowPage(DonePage);
             FinishButton.Focus();
+        }
+
+        /// <summary>卸载完成页；保留了数据时提供“打开数据文件夹”。</summary>
+        private void ShowUninstallDone(bool dataKept)
+        {
+            DoneTitle.Text = "卸载完成";
+            DoneDetail.Text = $"{_product.DisplayName} 已从这台电脑上移除。" +
+                              (dataKept ? "\n数据保留在安装目录的 data 文件夹中，重新安装到原位置会继续使用。" : "");
+            LaunchButton.Content = "打开数据文件夹";
+            LaunchButton.Style = (Style)FindResource("SecondaryButton");
+            LaunchButton.Visibility = dataKept ? Visibility.Visible : Visibility.Collapsed;
         }
 
         // ================= 公共流程 =================
@@ -429,11 +438,12 @@ namespace MdQuiz.Setup
         internal void SmokeShowDone(string dir)
         {
             _installedDir = dir;
-            DoneTitle.Text = _context.IsUninstall ? "卸载完成" : "安装完成";
-            DoneDetail.Text = _context.IsUninstall
-                ? $"{_product.DisplayName} 已从这台电脑上移除。\n数据保留在 {Path.Combine(dir, Installer.DataDirName)}，重新安装到相同位置会继续使用。"
-                : $"{_product.DisplayName} 已安装到 {dir}\n可以从桌面或开始菜单中的“{_product.DisplayName}”打开。";
-            LaunchButton.Visibility = _context.IsUninstall ? Visibility.Collapsed : Visibility.Visible;
+            if (_context.IsUninstall) ShowUninstallDone(dataKept: true);
+            else
+            {
+                DoneTitle.Text = "安装完成";
+                DoneDetail.Text = $"{_product.DisplayName} 已安装到 {dir}\n可以从桌面或开始菜单中的“{_product.DisplayName}”打开。";
+            }
             ShowPage(DonePage, animate: false);
         }
 
