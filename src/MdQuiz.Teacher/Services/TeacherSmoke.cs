@@ -112,6 +112,19 @@ namespace MdQuiz.Teacher.Services
             }
             await SmokeKit.Settle(500);
             await Page(main, "settings", "teacher-settings-mcp");
+
+            // 复制到剪贴板（设置页“复制”按钮使用的方式）；CI 环境的剪贴板可能不可用，只记录结果
+            var copied = ClipboardText.TrySet("mdquiz-smoke-" + s.Mcp.Port);
+            string pasted;
+            try
+            {
+                pasted = Clipboard.GetText();
+            }
+            catch (Exception ex)
+            {
+                pasted = "(GetText failed: " + ex.Message + ")";
+            }
+            SmokeKit.Step($"clipboard copy: {copied}, read back: {pasted}");
         }
 
         /// <summary>打开考生答卷窗口并截图。</summary>

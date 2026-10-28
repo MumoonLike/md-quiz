@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MdQuiz.Core.Models;
@@ -151,15 +150,8 @@ namespace MdQuiz.Teacher.ViewModels
         private void Copy(string text)
         {
             if (string.IsNullOrEmpty(text)) return;
-            try
-            {
-                Clipboard.SetText(text);
-                Ui.Toast("已复制到剪贴板");
-            }
-            catch (Exception ex)
-            {
-                Ui.Error("复制失败：" + ex.Message);
-            }
+            if (ClipboardText.TrySet(text)) Ui.Toast("已复制到剪贴板");
+            else Ui.ToastWarning("剪贴板正被其他程序占用，暂时无法复制。请稍后再点一次，或在文本框中选中内容后按 Ctrl+C。");
         }
 
         [RelayCommand]

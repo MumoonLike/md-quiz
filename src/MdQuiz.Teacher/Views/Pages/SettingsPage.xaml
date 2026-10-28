@@ -155,7 +155,8 @@
                                                 Foreground="{DynamicResource SecondaryTextBrush}" Width="32" Height="32" Margin="6,0,0,0"
                                                 Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
                                         <Border Background="{DynamicResource LightPrimaryBrush}" CornerRadius="6" Padding="12,6">
-                                            <TextBlock Text="{Binding}" FontFamily="{StaticResource MonoFont}" FontSize="13" Foreground="{DynamicResource DarkPrimaryBrush}" />
+                                            <TextBox Text="{Binding Mode=OneWay}" IsReadOnly="True" BorderThickness="0" Background="Transparent" Padding="0" MinHeight="0"
+                                                     FontFamily="{StaticResource MonoFont}" FontSize="13" Foreground="{DynamicResource DarkPrimaryBrush}" />
                                         </Border>
                                     </DockPanel>
                                 </DataTemplate>
