@@ -95,7 +95,7 @@ namespace MdQuiz.Teacher.ViewModels
             try
             {
                 S.Db.BackupTo(dlg.FileName);
-                Ui.Toast("备份完成");
+                Ui.ToastFile("数据库备份完成", dlg.FileName);
             }
             catch (Exception ex)
             {

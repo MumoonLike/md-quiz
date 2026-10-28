@@ -5,8 +5,8 @@ using System.Windows.Documents;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Threading;
-using HandyControl.Controls;
 using HandyControl.Tools;
+using MdQuiz.Wpf.Controls;
 using HcMessageBox = HandyControl.Controls.MessageBox;
 using Window = System.Windows.Window;
 
@@ -97,24 +97,38 @@ namespace MdQuiz.Wpf
             return Show(message, title, MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK;
         }
 
-        public static void Toast(string message) => OnUi(() => SafeGrowl(() => Growl.Success(message)));
+        // ---------------- 右下角通知 ----------------
 
-        public static void ToastInfo(string message) => OnUi(() => SafeGrowl(() => Growl.Info(message)));
+        public static void Toast(string message) => ShowToast(ToastKind.Success, message, null);
 
-        public static void ToastWarning(string message) => OnUi(() => SafeGrowl(() => Growl.Warning(message)));
+        public static void ToastInfo(string message) => ShowToast(ToastKind.Info, message, null);
 
-        public static void ToastError(string message) => OnUi(() => SafeGrowl(() => Growl.Error(message)));
+        public static void ToastWarning(string message) => ShowToast(ToastKind.Warning, message, null);
 
-        private static void SafeGrowl(Action show)
+        public static void ToastError(string message) => ShowToast(ToastKind.Error, message, null);
+
+        /// <summary>产出了文件的成功通知：附带“在资源管理器中打开”和“打开文件”。</summary>
+        public static void ToastFile(string message, string filePath) => ShowToast(ToastKind.Success, message, filePath);
+
+        private static void ShowToast(ToastKind kind, string message, string filePath)
         {
-            try
+            OnUi(() =>
             {
-                show();
-            }
-            catch (Exception)
-            {
-                // 没有注册 Growl 容器时忽略
-            }
+                if (Headless)
+                {
+                    SmokeKit.Step($"[toast:{kind}] {message}" + (filePath == null ? "" : " → " + filePath));
+                    return;
+                }
+                try
+                {
+                    // 没有通知区域的窗口（如登录窗口）中忽略
+                    ToastHost.Show(new ToastItem(kind, message, filePath));
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn("显示通知失败：" + ex.Message);
+                }
+            });
         }
 
         /// <summary>以当前活动窗口为父窗口显示对话框。</summary>

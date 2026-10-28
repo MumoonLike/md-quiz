@@ -140,7 +140,7 @@ namespace MdQuiz.Teacher.ViewModels
             {
                 var exam = S.Exams.Get(SelectedExam.Id);
                 ExcelService.ExportResults(dlg.FileName, S.Results.BuildTable(exam));
-                Ui.Toast("成绩已导出");
+                Ui.ToastFile("成绩已导出", dlg.FileName);
             }
             catch (Exception ex)
             {
