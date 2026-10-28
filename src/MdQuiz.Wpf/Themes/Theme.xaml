@@ -108,8 +108,8 @@
     <Style x:Key="NavItem" TargetType="RadioButton">
         <Setter Property="Foreground" Value="#C3CCF0" />
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="Height" Value="44" />
-        <Setter Property="Margin" Value="12,3" />
+        <Setter Property="Height" Value="40" />
+        <Setter Property="Margin" Value="12,2" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">

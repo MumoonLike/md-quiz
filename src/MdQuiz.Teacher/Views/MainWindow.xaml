@@ -17,7 +17,7 @@
         <!-- 侧边栏 -->
         <Border Background="{DynamicResource SidebarBrush}">
             <DockPanel>
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="20,18,0,26">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="20,16,0,20">
                     <Border Style="{StaticResource LogoTile}" Width="42" Height="42">
                         <Image Source="{StaticResource LogoImage}" />
                     </Border>
@@ -79,7 +79,7 @@
                         <RadioButton Style="{StaticResource NavItem}" Content="成绩与批改" Tag="{StaticResource Icon.ChartBoxOutline}"
                                      Command="{Binding NavigateCommand}" CommandParameter="results"
                                      IsChecked="{Binding CurrentKey, Converter={StaticResource EnumEquals}, ConverterParameter=results, Mode=OneWay}" />
-                        <TextBlock Text="资源" Foreground="#8C99CC" FontSize="12" Margin="30,18,0,6" />
+                        <TextBlock Text="资源" Foreground="#8C99CC" FontSize="12" Margin="30,14,0,6" />
                         <RadioButton Style="{StaticResource NavItem}" Content="题库" Tag="{StaticResource Icon.BookOpenVariant}"
                                      Command="{Binding NavigateCommand}" CommandParameter="bank"
                                      IsChecked="{Binding CurrentKey, Converter={StaticResource EnumEquals}, ConverterParameter=bank, Mode=OneWay}" />
@@ -89,7 +89,7 @@
                         <RadioButton Style="{StaticResource NavItem}" Content="学生" Tag="{StaticResource Icon.AccountGroup}"
                                      Command="{Binding NavigateCommand}" CommandParameter="students"
                                      IsChecked="{Binding CurrentKey, Converter={StaticResource EnumEquals}, ConverterParameter=students, Mode=OneWay}" />
-                        <TextBlock Text="系统" Foreground="#8C99CC" FontSize="12" Margin="30,18,0,6" />
+                        <TextBlock Text="系统" Foreground="#8C99CC" FontSize="12" Margin="30,14,0,6" />
                         <RadioButton Style="{StaticResource NavItem}" Content="设置" Tag="{StaticResource Icon.CogOutline}"
                                      Command="{Binding NavigateCommand}" CommandParameter="settings"
                                      IsChecked="{Binding CurrentKey, Converter={StaticResource EnumEquals}, ConverterParameter=settings, Mode=OneWay}" />
