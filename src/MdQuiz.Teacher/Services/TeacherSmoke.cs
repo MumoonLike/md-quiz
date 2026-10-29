@@ -143,8 +143,17 @@ namespace MdQuiz.Teacher.Services
             window.Close();
         }
 
+        /// <summary>截图中显示的示例名称（截图也用于用户手册，使用接近真实使用场景的名称）。</summary>
+        private const string SampleServerName = "302机房教师机";
+        private const string SamplePaperName = "信息技术期中测验";
+        private const string SampleGroupName = "高一信息技术";
+        private const string SampleExamName = "高一信息技术期中测验";
+
         private static async Task RunCore(AppServices s)
         {
+            // 考试服务在主窗口打开时启动，先设置好显示在学生端的教师机名称
+            s.ServerName = SampleServerName;
+
             // 登录窗口：首次使用和正常两种状态
             await Show(null, new LoginWindow(s), "teacher-login-first-run");
             s.Settings.SetPassword("smoke-test");
@@ -175,13 +184,13 @@ namespace MdQuiz.Teacher.Services
             SmokeKit.Step($"roster import: added {report.Added}, errors {report.Errors.Count}");
             var paper = new Paper
             {
-                Name = "冒烟测试试卷",
-                GroupId = s.Papers.AddGroup("冒烟测试分组"),
+                Name = SamplePaperName,
+                GroupId = s.Papers.AddGroup(SampleGroupName),
                 Items = valid.Select(q => new PaperItem { QuestionId = q.Question.Id, Score = q.Score ?? 2 }).ToList(),
             };
             s.Papers.Save(paper);
             var classIds = s.Roster.ListClasses().Select(c => c.Id).ToList();
-            var examId = s.PaperService.CreateExam(paper, "冒烟测试考试", classIds, new ExamSettings
+            var examId = s.PaperService.CreateExam(paper, SampleExamName, classIds, new ExamSettings
             {
                 DurationMinutes = 30,
                 AntiCheat = true,

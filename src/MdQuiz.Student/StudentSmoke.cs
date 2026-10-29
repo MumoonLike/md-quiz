@@ -20,6 +20,9 @@ namespace MdQuiz.Student
     /// </summary>
     public static class StudentSmoke
     {
+        /// <summary>冒烟测试时上报给教师端的电脑名（截图也用于用户手册）。</summary>
+        public const string MachineName = "LAB302-PC03";
+
         public static async Task RunAsync(Window main, ShellViewModel vm, string[] args)
         {
             var code = 1;
@@ -113,7 +116,7 @@ namespace MdQuiz.Student
                         foreach (var b in q.Blanks) b.Text = "北京";
                         break;
                     case QuestionType.ShortAnswer:
-                        q.ShortText = "这是冒烟测试自动填写的简答题答案。\n第二行。";
+                        q.ShortText = "客户端先发送 SYN，服务器回复 SYN+ACK，客户端再回复 ACK，连接建立。\n这样双方都能确认对方的发送和接收能力正常。";
                         break;
                 }
                 if (q.Number == 2) q.IsFlagged = true;

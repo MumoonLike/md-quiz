@@ -65,7 +65,7 @@ namespace MdQuiz.Student.ViewModels
         public ShellViewModel()
         {
             Settings = StudentSettings.Load();
-            Client = new ExamClient(Path.Combine(App.DataDir ?? AppPaths.ExeDir, "cache"), Environment.MachineName);
+            Client = new ExamClient(Path.Combine(App.DataDir ?? AppPaths.ExeDir, "cache"), SmokeKit.Enabled ? StudentSmoke.MachineName : Environment.MachineName);
             ConnectVm = new ConnectViewModel(this);
             LoginVm = new LoginViewModel(this);
             WaitingVm = new WaitingViewModel(this);
