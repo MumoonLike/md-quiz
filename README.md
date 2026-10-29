@@ -1,4 +1,4 @@
-# 明点知识考核系统
+# 明点智慧考评系统
 
 Windows 局域网考试 / 答题软件（项目代号 MdQuiz），分为**教师端**和**学生端**两个程序。教师机作为服务器，学生机在同一局域网内自动找到教师机、登录答题，答案实时保存到教师机。
 
@@ -42,7 +42,7 @@ Windows 局域网考试 / 答题软件（项目代号 MdQuiz），分为**教师
 
 双击安装程序（需要管理员权限，会弹出 UAC 确认），点“立即安装”即可；点右下角“自定义安装”可以修改安装位置、是否创建桌面快捷方式、是否添加防火墙例外（仅教师端）。
 
-- **默认位置**：`C:\Program Files\明点知识考核系统\教师端`（学生端为 `…\学生端`）。机房装有**还原卡**时，教师端请在“自定义安装”中改到不还原的磁盘（如 `D:\明点知识考核系统\教师端`），否则重启后题库和成绩会被还原掉。
+- **默认位置**：`C:\Program Files\明点智慧考评系统\教师端`（学生端为 `…\学生端`）。机房装有**还原卡**时，教师端请在“自定义安装”中改到不还原的磁盘（如 `D:\明点智慧考评系统\教师端`），否则重启后题库和成绩会被还原掉。
 - **安装内容**：程序文件、开始菜单和桌面快捷方式、控制面板“程序和功能”中的卸载项；教师端默认添加 Windows 防火墙例外（与 `firewall-teacher.bat` 相同），学生机无需放行。
 - **数据**：仍保存在安装目录下的 `data` 文件夹，安装程序会给它开放普通用户的写权限（装在 Program Files 也能正常保存）。
 - **升级**：直接运行新版本的安装程序，会自动找到原来的位置覆盖安装，数据保留；程序正在运行时会提示先关闭。升级时不能更换位置，如需更换请先卸载（数据会保留），把 `data` 文件夹复制到新位置后再安装。旧的免安装版目录也可以直接用安装程序覆盖。
@@ -53,7 +53,7 @@ Windows 局域网考试 / 答题软件（项目代号 MdQuiz），分为**教师
 安装目录结构（依赖的 DLL 统一放在 `lib` 文件夹中，免安装版也一样）：
 
 ```
-明点知识考核系统\教师端\
+明点智慧考评系统\教师端\
 ├─ MdQuiz.Teacher.exe        程序（学生端为 MdQuiz.Student.exe）
 ├─ MdQuiz.Teacher.exe.config
 ├─ lib\                      依赖的 DLL；教师端还有 x86\、x64\ 两个 SQLite 原生库
@@ -68,9 +68,9 @@ Windows 局域网考试 / 答题软件（项目代号 MdQuiz），分为**教师
 安装程序支持命令行参数，可以配合远程部署工具、域组策略或批处理在所有学生机上无界面安装：
 
 ```bat
-MdQuiz-Student-Setup-0.1.0.exe /S
-MdQuiz-Teacher-Setup-0.1.0.exe /S /nodesktop /D=D:\明点知识考核系统\教师端
-"C:\Program Files\明点知识考核系统\学生端\uninstall.exe" /S
+MdQuiz-Student-Setup-1.0.exe /S
+MdQuiz-Teacher-Setup-1.0.exe /S /nodesktop /D=D:\明点智慧考评系统\教师端
+"C:\Program Files\明点智慧考评系统\学生端\uninstall.exe" /S
 ```
 
 | 参数 | 作用 |
@@ -242,7 +242,7 @@ dotnet build src/MdQuiz.Setup/MdQuiz.Setup.csproj -c Release -p:SetupProduct=Stu
 - 在 Linux / macOS 上也能编译 WPF 项目和安装程序（`EnableWindowsTargeting` 已开启），但程序只能在 Windows 上运行。
 - 版本号在 `Directory.Build.props` 的 `Version` 中设置，程序和安装程序共用；安装程序据此判断升级。
 - 安装程序默认打包 `publish/MdQuiz-<产品>` 目录（不含 `.pdb` 和 `data`），可以用 `-p:PayloadDir=目录` 指定；没有找到时会给出警告，生成的安装程序不含程序文件。
-- 安装程序测试（Windows，管理员 PowerShell，约 1 分钟）：`pwsh tests/setup-test.ps1 -Product Teacher -Setup publish\MdQuiz-Teacher-Setup-0.1.0.exe`。安装程序还支持 `--smoke <目录>` 参数，依次显示各页面并截图，不执行任何安装操作。
+- 安装程序测试（Windows，管理员 PowerShell，约 1 分钟）：`pwsh tests/setup-test.ps1 -Product Teacher -Setup publish\MdQuiz-Teacher-Setup-1.0.exe`。安装程序还支持 `--smoke <目录>` 参数，依次显示各页面并截图，不执行任何安装操作。
 - 本机调试：同一台电脑可以同时运行教师端和学生端（学生端会通过 127.0.0.1 找到本机教师端）。
 
 ### 界面冒烟测试

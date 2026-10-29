@@ -47,7 +47,7 @@
                     </ItemsControl>
                     <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0"><Run Text="局域网自动发现：" /><Run Text="{Binding DiscoveryText, Mode=OneWay}" /></TextBlock>
                     <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0"
-                               Text="如果学生端连不上，请确认 Windows 防火墙已允许“明点知识考核系统 教师端”，或以管理员身份运行程序目录中的 firewall-teacher.bat。" />
+                               Text="如果学生端连不上，请确认 Windows 防火墙已允许“明点智慧考评系统 教师端”，或以管理员身份运行程序目录中的 firewall-teacher.bat。" />
                 </StackPanel>
             </Border>
 
@@ -257,7 +257,7 @@
             </Border>
 
             <TextBlock Style="{StaticResource Muted}" Margin="4,16,0,0">
-                <Run Text="明点知识考核系统 · 教师端 · 版本 " /><Run Text="{Binding Version, Mode=OneWay}" />
+                <Run Text="明点智慧考评系统 · 教师端 · 版本 " /><Run Text="{Binding Version, Mode=OneWay}" />
             </TextBlock>
         </StackPanel>
     </ScrollViewer>

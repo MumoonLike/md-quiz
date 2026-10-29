@@ -1,6 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- 明点知识考核系统标志（矢量，320×320）：蓝色 D 环 + 蓝色 M + 橙色 1 -->
+    <!-- 明点智慧考评系统标志（矢量，320×320）：蓝色 D 环 + 蓝色 M + 橙色 1 -->
     <SolidColorBrush x:Key="BrandBlueBrush" Color="#1E4FA8" />
     <SolidColorBrush x:Key="BrandOrangeBrush" Color="#E4581C" />
 

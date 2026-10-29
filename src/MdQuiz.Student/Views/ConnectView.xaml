@@ -15,7 +15,7 @@
                         <Image Source="{StaticResource LogoImage}" />
                     </Border>
                     <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="明点知识考核系统" Foreground="White" FontSize="26" FontWeight="Bold" />
+                        <TextBlock Text="明点智慧考评系统" Foreground="White" FontSize="26" FontWeight="Bold" />
                         <TextBlock Text="局域网考试 · 学生端" Foreground="#DCE3FF" FontSize="13" />
                     </StackPanel>
                 </StackPanel>

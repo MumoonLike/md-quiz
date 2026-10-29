@@ -23,7 +23,7 @@ namespace MdQuiz.Setup
             return dir;
         }
 
-        /// <summary>在“选择文件夹”中选了 D:\ 或 D:\Apps 时，自动补上“明点知识考核系统\教师端”。</summary>
+        /// <summary>在“选择文件夹”中选了 D:\ 或 D:\Apps 时，自动补上“明点智慧考评系统\教师端”。</summary>
         public static string FromPickedFolder(string picked)
         {
             var dir = Normalize(picked);

@@ -26,11 +26,11 @@
     <SetupFileName>MdQuiz-$(SetupProduct)-Setup-$(Version).exe</SetupFileName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(SetupProduct)' == 'Teacher'">
-    <AssemblyTitle>明点知识考核系统 教师端 安装程序</AssemblyTitle>
+    <AssemblyTitle>明点智慧考评系统 教师端 安装程序</AssemblyTitle>
     <PayloadExe>MdQuiz.Teacher.exe</PayloadExe>
   </PropertyGroup>
   <PropertyGroup Condition="'$(SetupProduct)' == 'Student'">
-    <AssemblyTitle>明点知识考核系统 学生端 安装程序</AssemblyTitle>
+    <AssemblyTitle>明点智慧考评系统 学生端 安装程序</AssemblyTitle>
     <PayloadExe>MdQuiz.Student.exe</PayloadExe>
   </PropertyGroup>
   <ItemGroup>

@@ -113,7 +113,7 @@ namespace MdQuiz.Server.Mcp
         /// <summary>每次工具调用后触发（后台线程）。</summary>
         public event Action<McpActivity> Activity;
 
-        public static string Version => typeof(McpServer).Assembly.GetName().Version.ToString(3);
+        public static string Version => Brand.FormatVersion(typeof(McpServer).Assembly.GetName().Version);
 
         // ---------------- 启停 ----------------
 
