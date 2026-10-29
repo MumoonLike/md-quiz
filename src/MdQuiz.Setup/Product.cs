@@ -80,14 +80,14 @@ namespace MdQuiz.Setup
         /// <summary>安装过程中轮流显示的功能介绍。</summary>
         public string[] Tips { get; private set; }
 
-        /// <summary>“明点知识考核系统 教师端”，用于快捷方式、控制面板“程序和功能”。</summary>
+        /// <summary>“明点智慧考评系统 教师端”，用于快捷方式、控制面板“程序和功能”。</summary>
         public string DisplayName => Brand.ProductName + " " + Edition;
 
         public string ProcessName => Path.GetFileNameWithoutExtension(ExeName);
 
         public string UninstallRegistryKey => @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MdQuiz." + Key;
 
-        /// <summary>默认安装位置：C:\Program Files\明点知识考核系统\教师端。</summary>
+        /// <summary>默认安装位置：C:\Program Files\明点智慧考评系统\教师端。</summary>
         public string DefaultDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Brand.ProductName, Edition);
 
         /// <summary>本安装程序的版本（三段，与注册表中的 DisplayVersion 比较）。</summary>
@@ -102,8 +102,8 @@ namespace MdQuiz.Setup
 
         public static string VersionText => FormatVersion(Version);
 
-        /// <summary>显示为 0.1.0（不足三段时按实际段数）。</summary>
-        public static string FormatVersion(Version v) => v == null ? "" : v.ToString(v.Build >= 0 ? 3 : 2);
+        /// <summary>显示为 1.0（有修订号时为 1.0.1）。</summary>
+        public static string FormatVersion(Version v) => Brand.FormatVersion(v);
     }
 
     internal sealed class Feature

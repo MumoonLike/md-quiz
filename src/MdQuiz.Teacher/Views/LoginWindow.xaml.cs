@@ -15,7 +15,7 @@ namespace MdQuiz.Teacher.Views
             InitializeComponent();
             _services = services;
             _firstRun = !services.Settings.HasPassword;
-            VersionText.Text = "版本 " + typeof(LoginWindow).Assembly.GetName().Version.ToString(3);
+            VersionText.Text = "版本 " + MdQuiz.Core.Brand.FormatVersion(typeof(LoginWindow).Assembly.GetName().Version);
             if (_firstRun)
             {
                 HeaderText.Text = "首次使用";

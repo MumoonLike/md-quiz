@@ -5,7 +5,7 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>MdQuiz.Student</RootNamespace>
     <AssemblyName>MdQuiz.Student</AssemblyName>
-    <AssemblyTitle>明点知识考核系统 学生端</AssemblyTitle>
+    <AssemblyTitle>明点智慧考评系统 学生端</AssemblyTitle>
     <ApplicationIcon>..\MdQuiz.Wpf\Assets\logo.ico</ApplicationIcon>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>

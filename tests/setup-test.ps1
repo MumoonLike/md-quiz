@@ -2,7 +2,7 @@
 #   静默安装到带空格和中文的路径 → 检查文件、lib 目录、注册表、快捷方式、防火墙、data 写权限
 #   → 启动安装好的程序，确认依赖能从 lib 加载 → 覆盖安装（升级）→ 静默卸载（保留数据）
 #   → 再装一次，卸载并删除数据，确认目录清理干净。
-# 用法：pwsh tests/setup-test.ps1 -Product Teacher -Setup publish\MdQuiz-Teacher-Setup-0.1.0.exe
+# 用法：pwsh tests/setup-test.ps1 -Product Teacher -Setup publish\MdQuiz-Teacher-Setup-1.0.exe
 param(
     [Parameter(Mandatory = $true)] [ValidateSet('Teacher', 'Student')] [string] $Product,
     [Parameter(Mandatory = $true)] [string] $Setup,
@@ -12,7 +12,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $script:failures = 0
 
-$brand = '明点知识考核系统'
+$brand = '明点智慧考评系统'
 $edition = @{ Teacher = '教师端'; Student = '学生端' }[$Product]
 $displayName = "$brand $edition"
 $exe = "MdQuiz.$Product.exe"

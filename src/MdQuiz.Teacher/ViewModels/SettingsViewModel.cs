@@ -56,7 +56,7 @@ namespace MdQuiz.Teacher.ViewModels
             ServerName = S.ServerName;
             Port = S.ServerPort.ToString();
             DataDir = S.DataDir;
-            Version = typeof(SettingsViewModel).Assembly.GetName().Version.ToString(3);
+            Version = MdQuiz.Core.Brand.FormatVersion(typeof(SettingsViewModel).Assembly.GetName().Version);
             Addresses.Clear();
             foreach (var ip in Discovery.LocalIPv4Addresses()) Addresses.Add($"{ip}:{S.Host.Port}");
             DiscoveryText = S.Host.DiscoveryEnabled

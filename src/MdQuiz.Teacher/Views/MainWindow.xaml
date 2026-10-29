@@ -3,7 +3,7 @@
            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
            xmlns:hc="https://handyorg.github.io/handycontrol"
            xmlns:ctl="clr-namespace:MdQuiz.Wpf.Controls;assembly=MdQuiz.Wpf"
-           Title="明点知识考核系统 · 教师端" Width="1320" Height="820" MinWidth="1100" MinHeight="680"
+           Title="明点智慧考评系统 · 教师端" Width="1320" Height="820" MinWidth="1100" MinHeight="680"
            WindowStartupLocation="CenterScreen"
            NonClientAreaBackground="#26367A" NonClientAreaForeground="White"
            OtherButtonForeground="White" OtherButtonHoverBackground="#22FFFFFF" OtherButtonHoverForeground="White"
@@ -22,7 +22,7 @@
                         <Image Source="{StaticResource LogoImage}" />
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="明点知识考核系统" Foreground="White" FontSize="16" FontWeight="Bold" />
+                        <TextBlock Text="明点智慧考评系统" Foreground="White" FontSize="16" FontWeight="Bold" />
                         <TextBlock Text="教师端" Foreground="#AEB9E8" FontSize="12" Margin="0,2,0,0" />
                     </StackPanel>
                 </StackPanel>

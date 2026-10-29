@@ -76,6 +76,7 @@ namespace MdQuiz.Setup
             ShellLink.Create(StartMenuLink, exe, dir, P.DisplayName);
             if (request.DesktopShortcut) ShellLink.Create(DesktopLink, exe, dir, P.DisplayName);
             else TryDeleteFile(DesktopLink);
+            RemoveLegacyShortcuts();
 
             if (P.OffersFirewall)
             {
@@ -145,6 +146,7 @@ namespace MdQuiz.Setup
             TryDeleteFile(DesktopLink);
             TryDeleteFile(StartMenuLink);
             TryDeleteEmptyDir(StartMenuDir);
+            RemoveLegacyShortcuts();
 
             var files = ReadManifest(dir);
             if (files.Count == 0) files = FallbackFileList(dir);
@@ -184,7 +186,7 @@ namespace MdQuiz.Setup
             SetupLog.Info("卸载完成");
         }
 
-        /// <summary>uninstall.exe 退出后删除它自己，再删除已经空了的安装目录和上级“明点知识考核系统”目录。</summary>
+        /// <summary>uninstall.exe 退出后删除它自己，再删除已经空了的安装目录和上级“明点智慧考评系统”目录。</summary>
         public static void ScheduleSelfDelete(string dir)
         {
             var self = Path.Combine(dir, UninstallerName);
@@ -192,7 +194,8 @@ namespace MdQuiz.Setup
             var script = new StringBuilder("ping -n 3 127.0.0.1 >nul");
             script.Append($" & del /f /q {Quote(self)} 2>nul");
             script.Append($" & rd {Quote(dir)} 2>nul"); // rd 不带 /s：保留了数据时目录不为空，不会删除
-            if (!string.IsNullOrEmpty(parent) && string.Equals(Path.GetFileName(parent), Brand.ProductName, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(parent) && new[] { Brand.ProductName }.Concat(LegacyProductNames)
+                    .Any(n => string.Equals(Path.GetFileName(parent), n, StringComparison.OrdinalIgnoreCase)))
                 script.Append($" & rd {Quote(parent)} 2>nul");
             try
             {
@@ -266,6 +269,22 @@ namespace MdQuiz.Setup
         public static string StartMenuDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms), Brand.ProductName);
 
         public static string StartMenuLink => Path.Combine(StartMenuDir, P.DisplayName + ".lnk");
+
+        /// <summary>改名前的产品名（0.1.0 版本叫“明点知识考核系统”）：升级和卸载时一并清理旧名称的快捷方式。</summary>
+        private static readonly string[] LegacyProductNames = { "明点知识考核系统" };
+
+        private static void RemoveLegacyShortcuts()
+        {
+            var desktop = Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory);
+            var programs = Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms);
+            foreach (var name in LegacyProductNames)
+            {
+                var linkName = name + " " + P.Edition + ".lnk";
+                TryDeleteFile(Path.Combine(desktop, linkName));
+                TryDeleteFile(Path.Combine(programs, name, linkName));
+                TryDeleteEmptyDir(Path.Combine(programs, name));
+            }
+        }
 
         private static List<string> ReadManifest(string dir)
         {

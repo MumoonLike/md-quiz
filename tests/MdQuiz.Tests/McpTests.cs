@@ -242,7 +242,7 @@ namespace MdQuiz.Tests
                     var list = await http.PostAsync("/mcp", Json(Request("tools/call", new { name = "get_overview", arguments = new { } }, 10 + i)));
                     var body = JObject.Parse(await list.Content.ReadAsStringAsync());
                     Assert.False((bool)body["result"]["isError"]);
-                    Assert.Contains("明点知识考核系统", (string)body["result"]["content"][0]["text"]);
+                    Assert.Contains("明点智慧考评系统", (string)body["result"]["content"][0]["text"]);
                 }
 
                 Assert.Equal(HttpStatusCode.MethodNotAllowed, (await http.GetAsync("/mcp")).StatusCode);
