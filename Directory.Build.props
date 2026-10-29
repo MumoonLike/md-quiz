@@ -12,4 +12,10 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);NU1701</NoWarn>
   </PropertyGroup>
+  <!-- 安装程序按 SetupProduct（Teacher / Student）分别编译，中间文件和输出分开存放，互不覆盖 -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'MdQuiz.Setup'">
+    <SetupProduct Condition="'$(SetupProduct)' == ''">Teacher</SetupProduct>
+    <BaseIntermediateOutputPath>$(MSBuildProjectDirectory)\obj\$(SetupProduct)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(MSBuildProjectDirectory)\bin\$(SetupProduct)\</BaseOutputPath>
+  </PropertyGroup>
 </Project>

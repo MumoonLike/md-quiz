@@ -13,6 +13,7 @@ Windows 局域网考试 / 答题软件（项目代号 MdQuiz），分为**教师
 - 断线不丢答案：学生每改一题就上报，同时写入本机缓存；断线自动重连，教师端重启后可恢复考试
 - 成绩：统计、分数段分布、按题批改与改分、查看考生答卷、导出 Excel（成绩表 + 答题明细）
 - MCP 服务（可选）：Claude、Cursor、Cherry Studio 等 AI 客户端可以通过 MCP 协议查询题库和成绩、出题组卷、操作考试，权限分三档单独开关
+- 安装：教师端、学生端各有一个中文安装程序（单个 exe），支持一键安装、自定义位置、覆盖升级、卸载，也支持静默安装，方便机房批量部署
 
 ## 运行环境
 
@@ -26,20 +27,69 @@ Windows 局域网考试 / 答题软件（项目代号 MdQuiz），分为**教师
 
 ## 获取程序
 
-**方式一：下载自动构建结果。** 每次推送代码后，GitHub Actions 会在 Windows 上编译并运行测试，在该次运行的 Artifacts 里可以下载：
+每次推送代码后，GitHub Actions 会在 Windows 上编译、运行测试并打包，在该次运行的 Artifacts 里可以下载：
 
-- `MdQuiz-Teacher`：教师端（含 `samples` 示例文件和 `firewall-teacher.bat`）
-- `MdQuiz-Student`：学生端
+| Artifact | 内容 |
+|---|---|
+| `MdQuiz-Setup` | **安装程序（推荐）**：`MdQuiz-Teacher-Setup-版本.exe`（教师端）、`MdQuiz-Student-Setup-版本.exe`（学生端） |
+| `MdQuiz-Teacher` | 教师端免安装版（含 `samples` 示例文件和 `firewall-teacher.bat`），解压即可运行 |
+| `MdQuiz-Student` | 学生端免安装版，解压即可运行 |
+| `setup-screenshots` | 安装程序各页面的截图（自动测试生成） |
 
-解压后即可运行，无需安装。
+也可以自己编译，见下文“开发与构建”。
 
-**方式二：自己编译**，见下文“开发与构建”。
+## 安装与卸载
+
+双击安装程序（需要管理员权限，会弹出 UAC 确认），点“立即安装”即可；点右下角“自定义安装”可以修改安装位置、是否创建桌面快捷方式、是否添加防火墙例外（仅教师端）。
+
+- **默认位置**：`C:\Program Files\明点知识考核系统\教师端`（学生端为 `…\学生端`）。机房装有**还原卡**时，教师端请在“自定义安装”中改到不还原的磁盘（如 `D:\明点知识考核系统\教师端`），否则重启后题库和成绩会被还原掉。
+- **安装内容**：程序文件、开始菜单和桌面快捷方式、控制面板“程序和功能”中的卸载项；教师端默认添加 Windows 防火墙例外（与 `firewall-teacher.bat` 相同），学生机无需放行。
+- **数据**：仍保存在安装目录下的 `data` 文件夹，安装程序会给它开放普通用户的写权限（装在 Program Files 也能正常保存）。
+- **升级**：直接运行新版本的安装程序，会自动找到原来的位置覆盖安装，数据保留；程序正在运行时会提示先关闭。升级时不能更换位置，如需更换请先卸载（数据会保留），把 `data` 文件夹复制到新位置后再安装。旧的免安装版目录也可以直接用安装程序覆盖。
+- **卸载**：运行安装目录根部的 `uninstall.exe`，或在控制面板“程序和功能”中卸载。默认**保留数据**（`data` 文件夹），勾选“同时删除数据”才会删除。卸载只删除安装时放入的文件，不会删除用户自己放进安装目录的文件。
+- **.NET Framework 4.8**：没有安装时，安装程序会提示并可打开微软下载页面；机房电脑没有网络时，把离线安装包 `ndp48-x86-x64-allos-enu.exe` 和安装程序放在同一文件夹，运行安装程序时会提示先安装它。（完全没有 .NET 4.x 的 Win7 会由系统提示安装 .NET Framework。）
+- 安装日志：`%TEMP%\MdQuiz-Teacher-Setup.log`（卸载为 `-Uninstall.log`，学生端为 `MdQuiz-Student-…`）。
+
+安装目录结构（依赖的 DLL 统一放在 `lib` 文件夹中，免安装版也一样）：
+
+```
+明点知识考核系统\教师端\
+├─ MdQuiz.Teacher.exe        程序（学生端为 MdQuiz.Student.exe）
+├─ MdQuiz.Teacher.exe.config
+├─ lib\                      依赖的 DLL；教师端还有 x86\、x64\ 两个 SQLite 原生库
+├─ samples\                  示例题库、示例花名册（教师端）
+├─ firewall-teacher.bat      防火墙放行脚本（教师端，免安装版使用）
+├─ data\                     数据（运行后生成）
+└─ uninstall.exe             卸载程序（安装版）
+```
+
+### 静默安装（机房批量部署）
+
+安装程序支持命令行参数，可以配合远程部署工具、域组策略或批处理在所有学生机上无界面安装：
+
+```bat
+MdQuiz-Student-Setup-0.1.0.exe /S
+MdQuiz-Teacher-Setup-0.1.0.exe /S /nodesktop /D=D:\明点知识考核系统\教师端
+"C:\Program Files\明点知识考核系统\学生端\uninstall.exe" /S
+```
+
+| 参数 | 作用 |
+|---|---|
+| `/S` | 静默运行，不显示界面（也认 `/silent`、`/quiet`） |
+| `/D=路径` | 安装位置，必须放在最后，路径含空格也不用加引号（也可写 `/dir="路径"`）。已安装时只能装在原位置 |
+| `/nodesktop` | 不创建桌面快捷方式 |
+| `/nofirewall` | 不添加防火墙例外（教师端） |
+| `/uninstall` | 卸载（`uninstall.exe` 默认就是卸载） |
+| `/deletedata` | 卸载时同时删除 `data` 数据（不加则保留） |
+| `/log=文件` | 日志写到指定文件 |
+
+退出码：`0` 成功，`1` 失败（详见日志），`2` 安装位置不可用，`3` 未安装 .NET Framework 4.8，`4` 已有安装程序在运行，`5` 没有找到要卸载的程序。静默安装时如果程序正在运行，会直接结束它。
 
 ## 使用流程
 
 ### 教师端（MdQuiz.Teacher.exe）
 
-1. **首次运行**：设置管理密码（之后每次打开都要输入）。如果学生连不上教师机，以管理员身份运行一次 `firewall-teacher.bat`。
+1. **首次运行**：设置管理密码（之后每次打开都要输入）。安装版默认已添加防火墙例外；使用免安装版时如果学生连不上教师机，以管理员身份运行一次 `firewall-teacher.bat`。
 2. **学生**：新建班级并录入学生，或“导入花名册”（Excel / CSV，列为“学号、姓名、班级”，可先“下载模板”）。
 3. **题库**：新建题目，或“导入 Markdown / 导入 Excel”。导入时可以顺便生成一份试卷。
 4. **试卷**：左侧试卷列表按分组折叠显示。点左上角文件夹按钮“新建分组”；分组标题右键（或悬停时的“…”）可以在该分组新建试卷、重命名、删除分组（组内试卷移到“未分组”，不会删除）。编辑区的分组下拉框可以把试卷移到其他分组。新建试卷 →“从题库选题”或“随机抽题”→ 调整顺序和分值 → 保存。
@@ -141,11 +191,16 @@ MdQuiz.sln
 │  ├─ MdQuiz.Wpf/       net48 WPF 库    界面共用：主题配色（基于 HandyControl）、标志（Assets/、Themes/Brand.xaml）、图标、转换器、
 │  │                                      MarkdownView（Markdig + WpfMath 渲染题目）、右下角通知 ToastHost、答题选项 ChoiceButton
 │  ├─ MdQuiz.Teacher/   net48 WPF 程序  教师端：登录、监考、考试管理、成绩批改、题库、试卷、学生、设置
-│  └─ MdQuiz.Student/   net48 WPF 程序  学生端：连接教师机、登录、候考、答题（防作弊全屏）、交卷结果
+│  ├─ MdQuiz.Student/   net48 WPF 程序  学生端：连接教师机、登录、候考、答题（防作弊全屏）、交卷结果
+│  └─ MdQuiz.Setup/     net48 WPF 程序  安装程序（教师端、学生端共用，按 SetupProduct 分别编译）：嵌入已发布的程序目录，
+│                                         一键 / 自定义安装、升级、卸载（uninstall.exe）、快捷方式、防火墙例外、静默安装；
+│                                         只依赖 .NET Framework 自带程序集，界面不用第三方控件库，单个 exe 即可分发
 ├─ tests/MdQuiz.Tests/  net8.0 xUnit   解析、判分、数据库（含旧库升级）、Excel、完整考试流程（本机回环）、MCP 测试
-├─ samples/             示例题库（Markdown）、示例花名册（CSV）
-├─ scripts/             firewall-teacher.bat（教师机防火墙放行）
-└─ .github/workflows/   Windows 自动构建、测试、打包
+├─ tests/setup-test.ps1 安装程序测试（Windows）：静默安装、检查、启动程序、升级、卸载
+├─ samples/             示例题库（Markdown）、示例花名册（CSV），随教师端一起发布
+├─ scripts/             firewall-teacher.bat（教师机防火墙放行），随教师端一起发布
+├─ Directory.Build.targets  发布时把依赖 DLL 移到 lib 子目录（exe 通过 App.config 的 probing 找到它们）
+└─ .github/workflows/   Windows 自动构建、测试、打包（免安装版 + 安装程序）
 ```
 
 主要技术选型及原因：
@@ -161,7 +216,7 @@ MdQuiz.sln
 
 - 学生端发 UDP 广播（端口 47321）查找教师机，教师机单播回复；随后通过 TCP（默认端口 47320，可在设置中修改）通信。因此**只有教师机需要放行防火墙**，学生机不需要。交换机隔离了广播时，学生手动输入教师机 IP 即可。
 - MCP 服务（默认关闭）使用 TCP 47330（可修改），默认只监听本机。
-- 数据目录：程序所在目录下的 `data` 文件夹（不可写时改用 `%LOCALAPPDATA%\MdQuiz\...`）。
+- 数据目录：程序所在目录下的 `data` 文件夹（安装版由安装程序开放写权限；不可写时改用 `%LOCALAPPDATA%\MdQuiz\...`）。
   - 教师端：`data/mdquiz.db`（全部题库、试卷及分组、花名册、考试记录、设置）、`data/logs/`。旧版本的数据库在新版本首次启动时自动升级（已有试卷归入“未分组”）。
   - 学生端：`data/cache/`（作答本地缓存）、`data/settings.json`、`data/logs/`
 - 机房装有**还原卡**时，请把教师端放在不还原的磁盘（如 D 盘），并定期在“设置”中备份数据库。
@@ -175,12 +230,19 @@ MdQuiz.sln
 # 运行测试（Windows / Linux / macOS 均可）
 dotnet test tests/MdQuiz.Tests/MdQuiz.Tests.csproj
 
-# 编译并输出可运行的程序
+# 编译并输出可运行的程序（免安装版，依赖 DLL 在 lib 子目录）
 dotnet publish src/MdQuiz.Teacher/MdQuiz.Teacher.csproj -c Release -o publish/MdQuiz-Teacher
 dotnet publish src/MdQuiz.Student/MdQuiz.Student.csproj -c Release -o publish/MdQuiz-Student
+
+# 生成安装程序（先执行上面两条发布命令），输出 publish/MdQuiz-Teacher-Setup-版本.exe、publish/MdQuiz-Student-Setup-版本.exe
+dotnet build src/MdQuiz.Setup/MdQuiz.Setup.csproj -c Release -p:SetupProduct=Teacher
+dotnet build src/MdQuiz.Setup/MdQuiz.Setup.csproj -c Release -p:SetupProduct=Student
 ```
 
-- 在 Linux / macOS 上也能编译 WPF 项目（`EnableWindowsTargeting` 已开启），但程序只能在 Windows 上运行。
+- 在 Linux / macOS 上也能编译 WPF 项目和安装程序（`EnableWindowsTargeting` 已开启），但程序只能在 Windows 上运行。
+- 版本号在 `Directory.Build.props` 的 `Version` 中设置，程序和安装程序共用；安装程序据此判断升级。
+- 安装程序默认打包 `publish/MdQuiz-<产品>` 目录（不含 `.pdb` 和 `data`），可以用 `-p:PayloadDir=目录` 指定；没有找到时会给出警告，生成的安装程序不含程序文件。
+- 安装程序测试（Windows，管理员 PowerShell，约 1 分钟）：`pwsh tests/setup-test.ps1 -Product Teacher -Setup publish\MdQuiz-Teacher-Setup-0.1.0.exe`。安装程序还支持 `--smoke <目录>` 参数，依次显示各页面并截图，不执行任何安装操作。
 - 本机调试：同一台电脑可以同时运行教师端和学生端（学生端会通过 127.0.0.1 找到本机教师端）。
 
 ### 界面冒烟测试
@@ -192,7 +254,7 @@ MdQuiz.Teacher.exe --smoke D:\smoke
 MdQuiz.Student.exe --smoke D:\smoke --server 127.0.0.1:47320 --student 20240101
 ```
 
-在 GitHub Actions 中手动运行 `build` 工作流并勾选“同时运行界面冒烟测试”，即可在 Windows 上执行，截图和日志会上传为 `smoke-results`。平时推送代码只做编译、单元测试和打包，不运行冒烟测试。
+在 GitHub Actions 中手动运行 `build` 工作流并勾选“同时运行界面冒烟测试”，即可在 Windows 上执行，截图和日志会上传为 `smoke-results`。平时推送代码只做编译、单元测试、打包，以及安装程序截图和安装 / 卸载测试（约 2 分钟），不运行界面冒烟测试。
 
 ## 第三方组件
 

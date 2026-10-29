@@ -10,6 +10,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <MoveLibsOnPublish>true</MoveLibsOnPublish>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\MdQuiz.Core\MdQuiz.Core.csproj" />
